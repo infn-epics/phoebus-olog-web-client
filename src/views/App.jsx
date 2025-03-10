@@ -18,8 +18,56 @@
 
 import { Outlet } from "react-router-dom";
 import { Box, Stack } from "@mui/material";
+import {
+  AuthProvider,
+  AuthContext,
+  TAuthConfig,
+  TRefreshTokenExpiredEvent
+} from "react-oauth2-code-pkce";
 import { Banner } from "../components/Banner";
 import Initialize from "../components/Initialize";
+import { useContext } from "react";
+import { AuthDataProvider, useAuthData } from "src/auth/authContext";
+
+const authConfig = {
+  clientId: "camunda",
+  authorizationEndpoint:
+    "https://idp-test.app.infn.it/auth/realms/aai/protocol/openid-connect/auth",
+  tokenEndpoint:
+    "https://idp-test.app.infn.it/auth/realms/aai/protocol/openid-connect/token",
+  redirectUri: "http://localhost:3000/",
+  scope: "openid",
+  onRefreshTokenExpire: (event) => event.logIn(undefined, undefined, "popup")
+};
+
+
+function LoginInfo() {
+  const { token, tokenData, logIn, logOut } = useAuthData();
+
+  if (!token) {
+    return (
+      <>
+        <div>You are not logged in.</div>
+        <button onClick={logIn}>Log in</button>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <p>logged</p>
+      {/*<div>*/}
+      {/*  <h4>Access Token (JWT)given_name</h4>*/}
+      {/*  <pre>{token}</pre>*/}
+      {/*</div>*/}
+      {/*<div>*/}
+      {/*  <h4>Decoded Token Data</h4>*/}
+      {/*  <pre>{JSON.stringify(tokenData, null, 2)}</pre>*/}
+      {/*</div>*/}
+      {/*<button onClick={logOut}>Log out</button>*/}
+    </>
+  );
+}
 
 /**
  * Entry point component.
@@ -31,17 +79,22 @@ const App = () => {
       height="100vh"
     >
       <Initialize>
-        <Banner />
-        <Box
-          id="app-content"
-          sx={{
-            overflow: "auto",
-            height: "100%",
-            padding: 1
-          }}
-        >
-          <Outlet />
-        </Box>
+        <AuthProvider authConfig={authConfig}>
+          <AuthDataProvider>
+            <LoginInfo />
+            <Banner />
+            <Box
+              id="app-content"
+              sx={{
+                overflow: "auto",
+                height: "100%",
+                padding: 1
+              }}
+            >
+              <Outlet />
+            </Box>
+          </AuthDataProvider>
+        </AuthProvider>
       </Initialize>
     </Stack>
   );

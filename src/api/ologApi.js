@@ -19,6 +19,7 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { useCallback } from "react";
 import customization from "config/customization";
+import { useAuthData } from "src/auth/authContext";
 
 export function ologClientInfoHeader() {
   return {
@@ -172,7 +173,7 @@ export const ologApi = createApi({
       })
     }),
     createLog: builder.mutation({
-      query: ({ log, replyTo }) => {
+      query: ({ log, replyTo, token }) => {
         const bodyFormData = new FormData();
 
         // Append all files. Each is added with name "files", and that is actually OK
@@ -190,6 +191,18 @@ export const ologApi = createApi({
           "logEntry",
           new Blob([JSON.stringify(log)], { type: "application/json" })
         );
+
+        if (import.meta.env.VITE_REACT_APP_USE_KEYCLOAK) {
+          return {
+            url: `/logs/multipart?markup=commonmark${replyTo ? `&inReplyTo=${replyTo}` : ""}`,
+            method: "PUT",
+            body: bodyFormData,
+            formData: true,
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          };
+        }
 
         return {
           url: `/logs/multipart?markup=commonmark${replyTo ? `&inReplyTo=${replyTo}` : ""}`,

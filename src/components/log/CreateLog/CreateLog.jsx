@@ -5,11 +5,13 @@ import { Backdrop, CircularProgress } from "@mui/material";
 import { EntryEditor } from "../EntryEditor";
 import { ologApi, useVerifyLogExists } from "api/ologApi";
 import useBetaNavigate from "hooks/useBetaNavigate";
+import { useAuthData } from "src/auth/authContext";
 
 const CreateLog = ({ isAuthenticated }) => {
   const [createInProgress, setCreateInProgress] = useState(false);
   const [createLog] = ologApi.endpoints.createLog.useMutation();
   const verifyLogExists = useVerifyLogExists();
+  const { token, tokenData, logIn, logOut } = useAuthData();
 
   const form = useForm({
     defaultValues: {
@@ -47,7 +49,7 @@ const CreateLog = ({ isAuthenticated }) => {
     };
     try {
       // Create log
-      const data = await createLog({ log: body }).unwrap();
+      const data = await createLog({ log: body, token: token}).unwrap();
       try {
         // Verify it is fully indexed/created before redirecting
         await verifyLogExists({ logRequest: formData, logResult: data });

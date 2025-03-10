@@ -38,12 +38,18 @@ import customization from "config/customization";
 import { useShowLogin, useShowLogout, useUser } from "features/authSlice";
 import { InternalButtonLink } from "components/shared/Link";
 import SkipToContent from "components/shared/SkipToContent";
+import { useAuthData } from "src/auth/authContext";
+
 
 /**
  * Banner component with controls to create log entry, log book or tag. Plus
  * button for signing in/out.
  */
 export const Banner = () => {
+
+  const { token, tokenData, logIn, logOut } = useAuthData();
+
+
   const user = useUser();
   const { showLogin, setShowLogin } = useShowLogin();
   const { showLogout, setShowLogout } = useShowLogout();
@@ -159,14 +165,16 @@ export const Banner = () => {
           <nav aria-label="user menu">
             <List>
               <ListItem>
-                <Button
+                {import.meta.env.VITE_REACT_APP_USE_KEYCLOAK ? (
+                  <p>{tokenData?.given_name}</p>
+                  ) :  <Button
                   onClick={handleClick}
                   variant="outlined"
                   color="ologWhite"
                   sx={{ whiteSpace: "nowrap" }}
                 >
                   {user?.userName ? user.userName : "Sign In"}
-                </Button>
+                </Button>}
               </ListItem>
             </List>
           </nav>

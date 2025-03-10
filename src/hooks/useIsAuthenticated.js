@@ -1,21 +1,33 @@
 import { useState, useEffect } from "react";
 import { useShowLogin, useUser } from "features/authSlice";
+import { useAuthData } from "src/auth/authContext";
 
 const useIsAuthenticated = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const { setShowLogin } = useShowLogin();
   const user = useUser();
+  const { token, tokenData, logIn, logOut } = useAuthData();
 
   /**
    * Show login if no session
    */
   useEffect(() => {
-    if (user) {
-      setIsAuthenticated(true);
-      setShowLogin(false);
+    if (import.meta.env.SNOWPACK_PUBLIC_IS_AUTH_ENABLED === "false") {
+      if (user) {
+        setIsAuthenticated(true);
+        setShowLogin(false);
+      } else {
+        setIsAuthenticated(false);
+        setShowLogin(true);
+      }
     } else {
-      setIsAuthenticated(false);
-      setShowLogin(true);
+      if (token) {
+        setIsAuthenticated(true);
+        setShowLogin(false);
+      } else {
+        setIsAuthenticated(false);
+        setShowLogin(true);
+      }
     }
   }, [setShowLogin, user]);
 
