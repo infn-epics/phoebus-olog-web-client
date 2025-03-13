@@ -49,7 +49,7 @@ const CreateLog = ({ isAuthenticated }) => {
     };
     try {
       // Create log
-      const data = await createLog({ log: body, token: token}).unwrap();
+      const data = await createLog({ log: body, token: token }).unwrap();
       try {
         // Verify it is fully indexed/created before redirecting
         await verifyLogExists({ logRequest: formData, logResult: data });

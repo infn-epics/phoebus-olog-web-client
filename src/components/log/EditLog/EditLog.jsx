@@ -4,12 +4,14 @@ import { Backdrop, CircularProgress } from "@mui/material";
 import { EntryEditor } from "../EntryEditor";
 import { ologApi, useVerifyLogExists } from "api/ologApi";
 import useBetaNavigate from "hooks/useBetaNavigate";
+import { useAuthData } from "src/auth/authContext";
 
 const EditLog = ({ log, isAuthenticated }) => {
   const [editInProgress, setEditInProgress] = useState(false);
   const [editLog] = ologApi.endpoints.editLog.useMutation();
   const verifyLogExists = useVerifyLogExists();
   const navigate = useBetaNavigate();
+  const { token, tokenData, logIn, logOut } = useAuthData();
 
   const existingLogGroup = log?.properties
     ?.filter((it) => it.name === "Log Entry Group")
@@ -53,7 +55,7 @@ const EditLog = ({ log, isAuthenticated }) => {
 
     try {
       // Edit the log
-      const data = await editLog({ log: body }).unwrap();
+      const data = await editLog({ log: body, token: token }).unwrap();
       try {
         // Verify full edited/available
         await verifyLogExists({ logRequest: formData, logResult: data });

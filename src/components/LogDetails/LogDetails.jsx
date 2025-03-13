@@ -46,7 +46,6 @@ const LogDetails = ({
   className
 }) => {
   const user = useUser();
-
   const renderedEditButton = customization.log_edit_support ? (
     <InternalButtonLink
       to={`/logs/${currentLogEntry?.id}/edit`}

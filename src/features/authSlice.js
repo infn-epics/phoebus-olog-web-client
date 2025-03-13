@@ -19,6 +19,9 @@ const authSlice = createSlice({
     },
     setShowLogout: (state, action) => {
       state.showLogout = action.payload;
+    },
+    setUser: (state, action) => {
+      state.user = action.payload;
     }
   },
   extraReducers: (builder) => {
@@ -48,7 +51,7 @@ const authSlice = createSlice({
         // on failure to get user data, clear the user state
         ologApi.endpoints.getUser.matchRejected,
         (state) => {
-          state.user = null;
+          // state.user = null; // TODO capire come sistemarlo
         }
       );
   }
@@ -87,4 +90,6 @@ export const useShowLogout = () => {
     setShowLogout
   };
 };
+
+export const { setUser } = authSlice.actions; // Esporta l'azione setUser
 export default authSlice.reducer;

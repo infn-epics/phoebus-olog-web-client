@@ -213,10 +213,13 @@ export const ologApi = createApi({
       }
     }),
     editLog: builder.mutation({
-      query: ({ log }) => ({
+      query: ({ log, token }) => ({
         url: `/logs/${log.id}?markup=commonmark`,
         method: "POST",
-        body: log
+        body: log,
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
       })
     }),
     getUser: builder.query({
