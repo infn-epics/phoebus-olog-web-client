@@ -177,20 +177,13 @@ export const ologApi = createApi({
         const bodyFormData = new FormData();
 
         // Append all files. Each is added with name "files", and that is actually OK
-        if (log.attachments && log.attachments.length > 0) {
+        if(log.attachments && log.attachments.length > 0) {
           for (let i = 0; i < log.attachments.length; i++) {
-            bodyFormData.append(
-              "files",
-              log.attachments[i].file,
-              log.attachments[i].file.name
-            );
+            bodyFormData.append("files", log.attachments[i].file, log.attachments[i].file.name);
           }
         }
         // Log entry must be added as JSON blob, otherwise the content type cannot be set.
-        bodyFormData.append(
-          "logEntry",
-          new Blob([JSON.stringify(log)], { type: "application/json" })
-        );
+        bodyFormData.append("logEntry", new Blob([JSON.stringify(log)], {type: 'application/json'}));
 
         if (import.meta.env.VITE_REACT_APP_USE_KEYCLOAK) {
           return {
@@ -202,16 +195,17 @@ export const ologApi = createApi({
               Authorization: `Bearer ${token}`
             }
           };
+        } else {
+          return {
+            url: `/logs/multipart?markup=commonmark${replyTo ? `&inReplyTo=${replyTo}` : ""}`,
+            method: 'PUT',
+            body: bodyFormData,
+            formData: true
+          }
         }
 
-        return {
-          url: `/logs/multipart?markup=commonmark${replyTo ? `&inReplyTo=${replyTo}` : ""}`,
-          method: "PUT",
-          body: bodyFormData,
-          formData: true
-        };
-      }
-    }),
+            }
+        }),
     editLog: builder.mutation({
       query: ({ log, token }) => ({
         url: `/logs/${log.id}?markup=commonmark`,
@@ -244,7 +238,13 @@ export const ologApi = createApi({
     }),
     getServerInfo: builder.query({
       query: () => ({
-        url: "/"
+          url: "/"
+        })
+    }),
+    getTemplates: builder.query({
+      query: () => ({
+        url: "/templates",
+        method: "GET"
       })
     })
   })

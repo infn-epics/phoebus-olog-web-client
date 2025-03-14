@@ -37,7 +37,7 @@ const RenderedAttachmentsContainer = styled("div")(
   })
 );
 
-const Description = ({ form, attachmentsDisabled }) => {
+const Description = ({ form, attachmentsDisabled, selectedSource }) => {
   const { control, formState, getValues, setValue } = form;
 
   const [maxRequestSizeMb, setMaxRequestSizeMb] = useState(
@@ -155,6 +155,9 @@ const Description = ({ form, attachmentsDisabled }) => {
 
   // Set the max attachment filesize
   useEffect(() => {
+    if (selectedSource) {
+      setValue("description", selectedSource);
+    }
     if (serverInfo) {
       setMaxRequestSizeMb(
         serverInfo.serverConfig?.maxRequestSize ??
@@ -165,7 +168,7 @@ const Description = ({ form, attachmentsDisabled }) => {
           customization.defaultMaxFileSizeMb
       );
     }
-  }, [serverInfo]);
+  }, [serverInfo, selectedSource]);
 
   /**
    * If attachments are present, creates a wrapper containing an array of Attachment components

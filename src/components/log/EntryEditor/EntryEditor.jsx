@@ -15,7 +15,8 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-import { useEffect, useRef } from "react";
+
+import { useEffect, useRef, useState } from "react";
 import { Button, Stack, Typography } from "@mui/material";
 import { Description } from "./Description";
 import { TextInput } from "components/shared/input/TextInput";
@@ -23,6 +24,8 @@ import LogbooksMultiSelect from "components/shared/input/managed/LogbooksMultiSe
 import TagsMultiSelect from "components/shared/input/managed/TagsMultiSelect";
 import EntryTypeSelect from "components/shared/input/managed/EntryTypeSelect";
 import { PropertyCollectionInput } from "components/shared/input/managed/PropertyCollectionInput";
+
+import TemplateSelect from "components/shared/input/managed/TemplateSelect";
 
 export const EntryEditor = ({
   form,
@@ -33,6 +36,7 @@ export const EntryEditor = ({
 }) => {
   const topElem = useRef();
   const { control, handleSubmit, formState } = form;
+  const [selectedSource, setSelectedSource] = useState("");
 
   // Scroll to top if there are field errors
   useEffect(() => {
@@ -70,6 +74,21 @@ export const EntryEditor = ({
         gap={2}
       >
         <span ref={topElem} />
+        <TemplateSelect
+          rules={{
+            validate: {
+              notEmpty: (val) => val?.length > 0 || "Please select a template"
+            }
+          }}
+          control={control}
+          onChange={(template) => {
+            // Cerca il template selezionato usando il suo ID
+            const selectedTemplate = template;
+
+            // Se esiste, aggiorna lo stato con il valore `source`
+            setSelectedSource(selectedTemplate || "");
+          }}
+        />
         <LogbooksMultiSelect
           control={control}
           rules={{
@@ -104,6 +123,7 @@ export const EntryEditor = ({
         <Description
           form={form}
           attachmentsDisabled={attachmentsDisabled}
+          selectedSource={selectedSource}
         />
         <PropertyCollectionInput control={control} />
         <Button
