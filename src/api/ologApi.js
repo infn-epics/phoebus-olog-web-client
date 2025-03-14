@@ -141,6 +141,7 @@ export const ologApi = createApi({
         createLog: builder.mutation({
             query: ({log, replyTo}) => {
 
+<<<<<<< Updated upstream
                 const bodyFormData = new FormData();
 
                 // Append all files. Each is added with name "files", and that is actually OK
@@ -198,6 +199,56 @@ export const ologApi = createApi({
                 url: "/"
             })
         })
+=======
+        return {
+          url: `/logs/multipart?markup=commonmark${replyTo ? `&inReplyTo=${replyTo}` : ""}`,
+          method: "PUT",
+          body: bodyFormData,
+          formData: true
+        };
+      }
+    }),
+    editLog: builder.mutation({
+      query: ({ log, token }) => ({
+        url: `/logs/${log.id}?markup=commonmark`,
+        method: "POST",
+        body: log,
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
+    }),
+    getUser: builder.query({
+      query: () => ({
+        url: "/user"
+      })
+    }),
+    login: builder.mutation({
+      query: ({ username, password }) => {
+        return {
+          url: "/login",
+          method: "POST",
+          body: { username: username, password: password }
+        };
+      }
+    }),
+    logout: builder.mutation({
+      query: () => ({
+        url: "/logout",
+        method: "GET" // yes this is a GET...
+      })
+    }),
+    getServerInfo: builder.query({
+      query: () => ({
+        url: "/"
+      })
+    }),
+    getTemplates: builder.query({
+      query: () => ({
+        url: "/templates",
+        method: "GET"
+      })
+>>>>>>> Stashed changes
     })
 });
 
