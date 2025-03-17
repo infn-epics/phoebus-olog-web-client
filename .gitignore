@@ -6,8 +6,9 @@ build
 # Editor / OS
 .vscode
 .idea/**
-**/.DS_Store 
+**/.DS_Store
 
 # Cypress
 **/videos/*
 **/screenshots/*
+**/downloads/*

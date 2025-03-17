@@ -2,11 +2,7 @@
 /* tslint:disable */
 
 /**
-<<<<<<< Updated upstream
- * Mock Service Worker (1.3.2).
-=======
  * Mock Service Worker.
->>>>>>> Stashed changes
  * @see https://github.com/mswjs/msw
  * - Please do NOT modify this file.
  * - Please do NOT serve this file on production.

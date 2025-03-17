@@ -35,7 +35,6 @@ export const EntryEditor = ({
   const topElem = useRef();
   const { control, handleSubmit, formState } = form;
   const [selectedSource, setSelectedSource] = useState("");
-
   // Scroll to top if there are field errors
   useEffect(() => {
     if (Object.keys(formState.errors).length > 0) {
@@ -73,19 +72,14 @@ export const EntryEditor = ({
       >
         <span ref={topElem} />
         <TemplateSelect
+          control={control}
           rules={{
             validate: {
-              notEmpty: (val) =>
-                val?.length > 0 || "Please select a template"
+              notEmpty: (val) => val?.length > 0 || "Please select a template"
             }
           }}
-          control={control}
           onChange={(template) => {
-            // Cerca il template selezionato usando il suo ID
-            const selectedTemplate = template;
-
-            // Se esiste, aggiorna lo stato con il valore `source`
-            setSelectedSource(selectedTemplate || "");
+            setSelectedSource(template || "");
           }}
         />
         <LogbooksMultiSelect
