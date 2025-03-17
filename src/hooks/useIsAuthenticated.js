@@ -12,7 +12,7 @@ const useIsAuthenticated = () => {
    * Show login if no session
    */
   useEffect(() => {
-    if (import.meta.env.SNOWPACK_PUBLIC_IS_AUTH_ENABLED === "false") {
+    if (import.meta.env.VITE_REACT_APP_USE_KEYCLOAK === "false") {
       if (user) {
         setIsAuthenticated(true);
         setShowLogin(false);
@@ -26,7 +26,7 @@ const useIsAuthenticated = () => {
         setShowLogin(false);
       } else {
         setIsAuthenticated(false);
-        setShowLogin(true);
+        logIn();
       }
     }
   }, [setShowLogin, user]);
