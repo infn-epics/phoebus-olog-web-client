@@ -1,7 +1,7 @@
 import { useEffect } from "react";
-import { Box, Button, Drawer, Stack } from "@mui/material";
+import { Box, Button, Stack } from "@mui/material";
 import { useForm } from "react-hook-form";
-import FilterAltIcon from "@mui/icons-material/FilterAlt";
+import { useTheme } from "@mui/material/styles";
 import { useDispatch } from "react-redux";
 import { TextInput } from "components/shared/input/TextInput";
 import WizardDateInput from "components/shared/input/WizardDateInput";
@@ -19,11 +19,7 @@ const toDate = (dateString) => {
   }
 };
 
-export const AdvancedSearchDrawer = ({
-  searchParams,
-  advancedSearchOpen,
-  setAdvancedSearchOpen
-}) => {
+export const AdvancedSearchDrawer = ({ searchParams, advancedSearchOpen }) => {
   const dispatch = useDispatch();
   const form = useForm({
     defaultValues: defaultSearchParams
@@ -34,142 +30,156 @@ export const AdvancedSearchDrawer = ({
     form.reset(searchParams);
   }, [form, searchParams]);
 
-  const closeDrawer = () => setAdvancedSearchOpen(false);
-
   const clearFilters = () => {
     dispatch(updateAdvancedSearch(defaultSearchParams));
     form.reset(defaultSearchParams);
   };
 
-  const onSubmit = () => {
+  const applyFilters = () => {
     dispatch(updateAdvancedSearch(getValues()));
-    closeDrawer();
   };
 
+  const handleSelectChange = (field, value) => {
+    field.onChange(value);
+    applyFilters();
+  };
+  const theme = useTheme();
+
   return (
-    <Drawer
-      open={advancedSearchOpen}
-      onClose={closeDrawer}
+    <Box
+      sx={{
+        position: "static",
+        transition: "width 0.25s ease, padding 0.25s ease",
+        width: advancedSearchOpen ? "290px" : 0,
+        padding: advancedSearchOpen ? "18px 8px" : "18px 0",
+        height: "100vh",
+        overflow: "auto",
+        [theme.breakpoints.down("md")]: {
+          width: advancedSearchOpen ? "240px" : 0,
+          position: "fixed",
+          zIndex: 3,
+          backgroundColor: theme.palette.background.paper
+        }
+      }}
     >
-      <Box
+      <Stack
+        component="form"
+        onSubmit={handleSubmit(applyFilters)}
+        aria-labelledby="advanced-search"
+        role="search"
+        gap={2}
         px={1}
-        pt={3}
-        pb={2}
-        sx={{ width: "315px" }}
       >
-        <Stack>
-          <Stack
-            component="form"
-            onSubmit={handleSubmit(onSubmit)}
-            aria-labelledby="advanced-search"
-            role="search"
-            gap={1.5}
-            px={1}
+        <TextInput
+          name="title"
+          label="Title"
+          control={control}
+          defaultValue=""
+        />
+        <TextInput
+          name="desc"
+          label="Description"
+          control={control}
+          defaultValue=""
+        />
+        <TextInput
+          name="properties"
+          label="Properties"
+          control={control}
+          defaultValue=""
+        />
+        <EntryTypeSelect
+          onChange={handleSelectChange}
+          control={control}
+        />
+        <LogbooksMultiSelect
+          onChange={handleSelectChange}
+          control={control}
+        />
+        <TagsMultiSelect
+          onChange={handleSelectChange}
+          control={control}
+        />
+        <TextInput
+          name="owner"
+          label="Author"
+          control={control}
+          defaultValue=""
+        />
+        <WizardDateInput
+          name="start"
+          label="Start Time"
+          form={form}
+          defaultValue={getValues("start")}
+          applyFilters={applyFilters}
+          DatePickerProps={{
+            disableFuture: true
+          }}
+          rules={{
+            validate: {
+              timeParadox: (val) => {
+                const startDate = toDate(val);
+                const endDate = toDate(getValues("end"));
+                if (startDate && endDate) {
+                  return (
+                    startDate <= endDate ||
+                    "Start date cannot come after end date"
+                  );
+                } else {
+                  return true;
+                }
+              }
+            }
+          }}
+        />
+        <WizardDateInput
+          name="end"
+          label="End Time"
+          form={form}
+          defaultValue={getValues("end")}
+          applyFilters={applyFilters}
+          DatePickerProps={{
+            disableFuture: true
+          }}
+          rules={{
+            validate: {
+              timeParadox: (val) => {
+                const startDate = toDate(getValues("start"));
+                const endDate = toDate(val);
+                if (startDate && endDate) {
+                  return (
+                    endDate > startDate ||
+                    "End date cannot come before start date"
+                  );
+                } else {
+                  return true;
+                }
+              }
+            }
+          }}
+        />
+        <TextInput
+          name="attachments"
+          label="Attachments"
+          control={control}
+          defaultValue=""
+        />
+        <Stack
+          flexDirection="row"
+          justifyContent="flex-end"
+        >
+          <Button
+            onClick={clearFilters}
+            sx={{ marginRight: "10px" }}
           >
-            <TextInput
-              name="title"
-              label="Title"
-              control={control}
-              defaultValue=""
-            />
-            <TextInput
-              name="desc"
-              label="Text"
-              control={control}
-              defaultValue=""
-            />
-            <TextInput
-              name="properties"
-              label="Properties"
-              control={control}
-              defaultValue=""
-            />
-            <EntryTypeSelect control={control} />
-            <LogbooksMultiSelect control={control} />
-            <TagsMultiSelect control={control} />
-            <TextInput
-              name="owner"
-              label="Author"
-              control={control}
-              defaultValue=""
-            />
-            <WizardDateInput
-              name="start"
-              label="Start Time"
-              form={form}
-              defaultValue={getValues("start")}
-              DatePickerProps={{
-                disableFuture: true
-              }}
-              rules={{
-                validate: {
-                  timeParadox: (val) => {
-                    const startDate = toDate(val);
-                    const endDate = toDate(getValues("end"));
-                    if (startDate && endDate) {
-                      return (
-                        startDate <= endDate ||
-                        "Start date cannot come after end date"
-                      );
-                    } else {
-                      return true;
-                    }
-                  }
-                }
-              }}
-            />
-            <WizardDateInput
-              name="end"
-              label="End Time"
-              form={form}
-              defaultValue={getValues("end")}
-              DatePickerProps={{
-                disableFuture: true
-              }}
-              rules={{
-                validate: {
-                  timeParadox: (val) => {
-                    const startDate = toDate(getValues("start"));
-                    const endDate = toDate(val);
-                    if (startDate && endDate) {
-                      return (
-                        endDate > startDate ||
-                        "End date cannot come before start date"
-                      );
-                    } else {
-                      return true;
-                    }
-                  }
-                }
-              }}
-            />
-            <TextInput
-              name="attachments"
-              label="Attachments"
-              control={control}
-              defaultValue=""
-            />
-            <Stack
-              flexDirection="row"
-              justifyContent="flex-end"
-            >
-              <Button
-                onClick={clearFilters}
-                sx={{ marginRight: "10px" }}
-              >
-                Clear filters
-              </Button>
-              <Button
-                type="submit"
-                variant="contained"
-                startIcon={<FilterAltIcon />}
-              >
-                Apply
-              </Button>
-            </Stack>
-          </Stack>
+            Clear filters
+          </Button>
+          <Button
+            type="submit"
+            sx={{ display: "none" }}
+          />
         </Stack>
-      </Box>
-    </Drawer>
+      </Stack>
+    </Box>
   );
 };

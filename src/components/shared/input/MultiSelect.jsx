@@ -88,6 +88,22 @@ const MultiSelect = styled(
         clearOnBlur
         handleHomeEndKeys
         disablePortal
+        sx={{
+          "& .MuiAutocomplete-tag": { fontSize: ".8rem", height: "30px" },
+          "& .MuiFormLabel-root": {
+            fontSize: ".9rem",
+            top: "-4px"
+          },
+          "& .MuiInputLabel-shrink": { top: 0 },
+          "& .MuiInputBase-root": { padding: "6px 9px", fontSize: ".9rem" },
+          "& .MuiInputBase-input": { fontSize: ".9rem" },
+          "& .MuiAutocomplete-popper": { fontSize: ".9rem" }
+        }}
+        ListboxProps={{
+          sx: {
+            fontSize: ".95rem"
+          }
+        }}
         {...props}
       />
     );

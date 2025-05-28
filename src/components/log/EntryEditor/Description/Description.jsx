@@ -192,6 +192,7 @@ const Description = ({ form, attachmentsDisabled, selectedSource }) => {
         defaultValue=""
         multiline
         minRows={10}
+        sx={{ "& .MuiInputBase-root": { padding: 0 } }}
         onPaste={handlePaste}
       />
       <Stack

@@ -1,34 +1,27 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Alert, Snackbar, styled } from "@mui/material";
 import MultiSelect from "../MultiSelect";
 import customization from "config/customization";
+import { ologApi } from "src/api/ologApi";
 
 const errorText =
-  "Misconfigured VITE_APP_LEVEL_VALUES. Please contact your administrator.";
+  "Misconfigured level values. Please contact your administrator.";
 
 const EntryTypeSelect = styled(({ control, className, ...props }) => {
-  const [levelValues, setLevelValues] = useState([]);
   const [showError, setShowError] = useState(false);
 
-  useEffect(() => {
-    try {
-      setLevelValues(JSON.parse(customization.levelValues));
-    } catch (e) {
-      setShowError(true);
-      console.error(errorText, e);
-      return;
-    }
-  }, []);
+  const { data: levels = [], isLoading } =
+    ologApi.endpoints.getLevels.useQuery();
 
   return (
     <>
       <MultiSelect
         className={className}
         name="level"
-        label={customization.level ?? "Entry Type"}
+        label={customization.level ?? "Entry type"}
         control={control}
-        defaultValue={customization.defaultLevel}
-        options={levelValues}
+        options={levels?.map((level) => level?.name)}
+        loading={isLoading}
         {...props}
       />
       <Snackbar open={showError}>

@@ -63,11 +63,11 @@ const delay = (duration) => {
 };
 
 const withRetry = async ({
-                           fcn,
-                           retries = 5,
-                           retryCondition = () => true,
-                           retryDelay = () => 30
-                         }) => {
+  fcn,
+  retries = 5,
+  retryCondition = () => true,
+  retryDelay = () => 30
+}) => {
   let retryCount = 0;
   let shouldRetry = true;
   let res = null;
@@ -102,21 +102,22 @@ export const ologApi = createApi({
   endpoints: (builder) => ({
     searchLogs: builder.query({
       query: ({
-                query,
-                title,
-                desc,
-                properties,
-                start,
-                end,
-                level,
-                logbooks,
-                tags,
-                owner,
-                attachments,
-                from,
-                size,
-                sort
-              }) => {
+        query,
+        title,
+        desc,
+        properties,
+        start,
+        end,
+        level,
+        logbooks,
+        tags,
+        owner,
+        attachments,
+        from,
+        size,
+        sort,
+        getTemplate
+      }) => {
         return {
           url: "/logs/search",
           params: {
@@ -133,7 +134,8 @@ export const ologApi = createApi({
             attachments,
             from,
             size,
-            sort
+            sort,
+            getTemplate
           }
         };
       }
@@ -235,6 +237,11 @@ export const ologApi = createApi({
       query: () => ({
         url: "/templates",
         method: "GET"
+      })
+    }),
+    getLevels: builder.query({
+      query: () => ({
+        url: "/levels"
       })
     })
   })

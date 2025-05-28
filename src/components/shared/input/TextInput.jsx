@@ -15,6 +15,14 @@ export const TextInput = styled(
         helperText={fieldState?.error?.message}
         error={Boolean(fieldState?.error)}
         inputRef={field.ref}
+        sx={{
+          "& .MuiFormLabel-root": {
+            fontSize: ".9rem",
+            top: "-4px"
+          },
+          "& .MuiInputLabel-shrink": { top: 0 },
+          "& .MuiInputBase-input": { padding: "12.5px 15px", fontSize: ".9rem" }
+        }}
         {...field}
         {...props}
       />

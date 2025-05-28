@@ -33,8 +33,20 @@ export const EntryEditor = ({
   attachmentsDisabled
 }) => {
   const topElem = useRef();
-  const { control, handleSubmit, formState } = form;
   const [selectedSource, setSelectedSource] = useState("");
+  const { control, handleSubmit, formState, setValue } = form;
+
+  // const { data: levels } = ologApi.endpoints.getLevels.useQuery();
+  // const defaultLevel = levels?.find((level) => level?.defaultLevel);
+
+  // useEffect(() => {
+  //   if (!attachmentsDisabled) {
+  //     setTimeout(() => {
+  //       setValue("level", defaultLevel?.name);
+  //     }, 0);
+  //   }
+  // }, [defaultLevel, setValue, attachmentsDisabled]);
+
   // Scroll to top if there are field errors
   useEffect(() => {
     if (Object.keys(formState.errors).length > 0) {
@@ -45,7 +57,7 @@ export const EntryEditor = ({
         topElem.current.scrollIntoView({ behavior: "smooth" });
       }
     }
-  }, [formState]);
+  }, [formState, setValue]);
 
   return (
     <Stack
@@ -61,7 +73,8 @@ export const EntryEditor = ({
       <Typography
         component="h2"
         variant="h3"
-        py={2}
+        fontSize="2rem"
+        py={1}
       >
         {title}
       </Typography>

@@ -27,15 +27,14 @@ import {
   ListItem,
   Divider,
   Badge,
-  Box
+  Box,
+  Tooltip
 } from "@mui/material";
 import { Link as RouterLink, useLocation } from "react-router-dom";
-import { useState } from "react";
 import LockIcon from "@mui/icons-material/Lock";
-import AddCircleIcon from "@mui/icons-material/AddCircle";
 import HomeIcon from "@mui/icons-material/Home";
 import FilterAltIcon from "@mui/icons-material/FilterAlt";
-import HelpCenterIcon from "@mui/icons-material/HelpCenter";
+import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import { useDispatch } from "react-redux";
 import UserMenu from "./UserMenu";
 import Initialize from "components/Initialize";
@@ -46,33 +45,26 @@ import LogoutDialog from "components/LoginLogout/LogoutDialog";
 import { useAdvancedSearch } from "features/advancedSearchReducer";
 import SimpleSearch from "beta/components/search/SimpleSearch";
 import { SortToggleButton } from "beta/components/search/SortToggleButton";
-import { AdvancedSearchDrawer } from "beta/components/search/AdvancedSearchDrawer";
-import {
-  defaultSearchParams,
-  useSearchParams
-} from "features/searchParamsReducer";
+import { defaultSearchParams } from "features/searchParamsReducer";
 import {
   updateSearchPageParams,
   useSearchPageParams
 } from "features/searchPageParamsReducer";
 import { theme } from "src/config/theme";
 import { updateAdvancedSearch } from "src/features/advancedSearchThunk";
+import useBetaNavigate from "src/hooks/useBetaNavigate";
+import { onHomePage } from "src/beta/utils/isHomePage";
 
-const showSearchBoxRegex = /^\/$|^\/beta$|^\/beta\/logs$|^\/beta\/logs\/\d+$/;
-
-const AppNavBar = () => {
+const AppNavBar = ({ advancedSearchOpen, setAdvancedSearchOpen }) => {
   const user = useUser();
+  const navigate = useBetaNavigate();
   const location = useLocation();
   const { pathname } = location;
   const { setShowLogin } = useShowLogin();
   const { active: advancedSearchActive, fieldCount: advancedSearchFieldCount } =
     useAdvancedSearch();
-  const searchParams = useSearchParams();
   const searchPageParams = useSearchPageParams();
-  const [advancedSearchOpen, setAdvancedSearchOpen] = useState(false);
   const dispatch = useDispatch();
-
-  const onHomePage = showSearchBoxRegex.test(pathname);
 
   const toggleSort = () => {
     dispatch(
@@ -84,11 +76,6 @@ const AppNavBar = () => {
   };
   return (
     <Initialize>
-      <AdvancedSearchDrawer
-        searchParams={searchParams}
-        advancedSearchOpen={advancedSearchOpen}
-        setAdvancedSearchOpen={setAdvancedSearchOpen}
-      />
       <AppBar
         sx={{
           backgroundColor: "transparent",
@@ -103,9 +90,11 @@ const AppNavBar = () => {
           disableGutters
           sx={{
             display: "grid",
-            gridTemplateColumns: onHomePage ? "1.15fr auto 2fr" : "auto",
+            gridTemplateColumns: onHomePage(pathname)
+              ? "auto 1.25fr auto 2fr"
+              : "auto 1fr auto",
             gridTemplateRows: "1fr",
-            height: "80px",
+            height: "70px",
             [theme.breakpoints.down("md")]: {
               height: "auto",
               display: "flex",
@@ -125,7 +114,11 @@ const AppNavBar = () => {
             }
           }}
         >
-          {onHomePage && (
+          <Divider
+            sx={{ borderColor: "#E2E8EE" }}
+            orientation="vertical"
+          />
+          {onHomePage(pathname) && (
             <>
               <nav
                 style={{ height: "100%" }}
@@ -141,18 +134,34 @@ const AppNavBar = () => {
 
                   <Box sx={{ minWidth: "100px", flex: 1 }}>
                     <IconButton
-                      sx={{ marginRight: "10px" }}
-                      onClick={() => setAdvancedSearchOpen(true)}
-                    >
-                      <Badge
-                        badgeContent={
-                          advancedSearchActive ? advancedSearchFieldCount : 0
+                      sx={{
+                        marginRight: "10px",
+                        backgroundColor: advancedSearchOpen
+                          ? "#dedede"
+                          : "inherit",
+                        "&:hover": {
+                          backgroundColor: advancedSearchOpen
+                            ? "#dedede"
+                            : "#F5F5F5"
                         }
-                        color="primary"
+                      }}
+                      onClick={() => setAdvancedSearchOpen((prev) => !prev)}
+                    >
+                      <Tooltip
+                        enterDelay={200}
+                        title="Filter"
                       >
-                        <FilterAltIcon sx={{ color: "#616161" }} />
-                      </Badge>
+                        <Badge
+                          badgeContent={
+                            advancedSearchActive ? advancedSearchFieldCount : 0
+                          }
+                          color="primary"
+                        >
+                          <FilterAltIcon sx={{ color: "#616161" }} />
+                        </Badge>
+                      </Tooltip>
                     </IconButton>
+
                     <SortToggleButton
                       label="create date"
                       isDescending={searchPageParams?.dateDescending}
@@ -177,10 +186,11 @@ const AppNavBar = () => {
           >
             <Button
               component={RouterLink}
-              onClick={() =>
-                dispatch(updateAdvancedSearch({ ...defaultSearchParams }))
-              }
-              to="/beta"
+              onClick={() => {
+                dispatch(updateAdvancedSearch({ ...defaultSearchParams }));
+                setAdvancedSearchOpen(false);
+              }}
+              to="/"
               sx={{ padding: "8px", marginLeft: "-8px" }}
             >
               <IconButton
@@ -208,17 +218,6 @@ const AppNavBar = () => {
                   gap: "10px"
                 }}
               >
-                {user ? (
-                  <ListItem sx={{ padding: 0 }}>
-                    <InternalButtonLink
-                      to="/beta/logs/create"
-                      color="inherit"
-                      startIcon={<AddCircleIcon />}
-                    >
-                      New Entry
-                    </InternalButtonLink>
-                  </ListItem>
-                ) : null}
                 <List
                   aria-label="help menu"
                   sx={{
@@ -226,16 +225,36 @@ const AppNavBar = () => {
                   }}
                 >
                   <ListItem sx={{ padding: 0 }}>
-                    <InternalButtonLink
-                      component={RouterLink}
-                      startIcon={<HelpCenterIcon titleAccess="help" />}
-                      to="/beta/help"
-                      color="inherit"
-                    >
-                      Help
-                    </InternalButtonLink>
+                    <Tooltip title="Help">
+                      <IconButton onClick={() => navigate("/help")}>
+                        <HelpOutlineIcon
+                          color="primary"
+                          titleAccess="help"
+                          sx={{ fontSize: "25px" }}
+                        />
+                      </IconButton>
+                    </Tooltip>
                   </ListItem>
                 </List>
+                {user ? (
+                  <ListItem sx={{ padding: 0 }}>
+                    <InternalButtonLink
+                      to="/logs/create"
+                      variant="contained"
+                      color="primary"
+                      sx={{
+                        fontWeight: 600,
+                        minWidth: "100px",
+                        padding: "6px 15px",
+                        fontSize: "0.8rem",
+                        boxShadow: "none"
+                      }}
+                    >
+                      Create log
+                    </InternalButtonLink>
+                  </ListItem>
+                ) : null}
+
                 <ListItem sx={{ padding: "0 0 0 8px" }}>
                   {user?.userName ? (
                     <UserMenu user={user} />
