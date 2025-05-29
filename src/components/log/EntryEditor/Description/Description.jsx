@@ -88,6 +88,13 @@ const Description = ({ form, attachmentsDisabled, selectedSource }) => {
 
   const { data: serverInfo } = ologApi.endpoints.getServerInfo.useQuery();
 
+  const generateUniqueFileName = (file) => {
+    return new File([file], `${new Date().getTime()}-${file.name}`, {
+      type: file.type,
+      lastModified: file.lastModified
+    });
+  };
+
   /**
    * Appends an attachment object to the attachments form field
    * @param {*} event
@@ -96,7 +103,12 @@ const Description = ({ form, attachmentsDisabled, selectedSource }) => {
     if (files) {
       // note event.target.files is a FileList, not an array! But we can convert it
       Array.from(files).forEach((file) => {
-        appendAttachment(new OlogAttachment({ file, id: uuidv4() }));
+        appendAttachment(
+          new OlogAttachment({
+            file: generateUniqueFileName(file),
+            id: uuidv4()
+          })
+        );
       });
     }
   };
@@ -142,8 +154,10 @@ const Description = ({ form, attachmentsDisabled, selectedSource }) => {
    */
   const addEmbeddedImage = (file, width, height) => {
     const id = uuidv4();
-    appendAttachment(new OlogAttachment({ file, id }));
-    const imageMarkup = `![](${customization.APP_BASE_URL}/attachment/${id}){width=${width} height=${height}}`;
+    appendAttachment(
+      new OlogAttachment({ file: generateUniqueFileName(file), id })
+    );
+    const imageMarkup = `![](attachment/${id}){width=${width} height=${height}}`;
     let description = getValues("description") || "";
     description += imageMarkup;
     setValue("description", description, {

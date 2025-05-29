@@ -1,6 +1,6 @@
 {
   "name": "Olog",
-  "version": "2.0.0",
+  "version": "2.2.2",
   "private": true,
   "dependencies": {
     "@emotion/react": "^11.11.1",
@@ -41,7 +41,6 @@
     "start": "vite",
     "build": "tsc && vite build",
     "serve": "vite preview",
-    "start-beta": "export VITE_APP_ENABLE_BETA=true && vite",
     "test": "vitest",
     "test:coverage": "vitest run --coverage --watch=false",
     "eslint": "npx eslint src",

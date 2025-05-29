@@ -16,35 +16,78 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
-import { Outlet } from "react-router-dom";
-import { Box, Stack } from "@mui/material";
-import { Banner } from "../components/Banner";
-import Initialize from "../components/Initialize";
+import { useState } from "react";
+import { Outlet, useLocation } from "react-router-dom";
+import { Box, styled } from "@mui/material";
+import { AdvancedSearchDrawer } from "../components/search/AdvancedSearchDrawer";
+import { onHomePage } from "../hooks/isHomePage";
+import { AppNavBar } from "src/components/AppNavBar";
+import Initialize from "components/Initialize";
+import { theme } from "src/config/theme";
+import { useSearchParams } from "src/features/searchParamsReducer";
 
-/**
- * Entry point component.
- */
-const App = () => {
+const Overlay = styled("div")(({ theme }) => ({
+  [theme.breakpoints.down("md")]: {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    zIndex: 2
+  }
+}));
+
+const App = styled(({ className }) => {
+  const searchParams = useSearchParams();
+  const { pathname } = useLocation();
+  const [advancedSearchOpen, setAdvancedSearchOpen] = useState(false);
   return (
-    <Stack
-      id="app-viewport"
-      height="100vh"
-    >
-      <Initialize>
-        <Banner />
+    <Initialize>
+      {advancedSearchOpen && (
+        <Overlay onClick={() => setAdvancedSearchOpen(false)} />
+      )}
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: onHomePage(pathname) ? "auto 2fr" : null,
+          gridTemplateRows: "1fr",
+          height: "100vh",
+          overflow: "auto",
+          transition: ""
+        }}
+      >
+        {onHomePage(pathname) && (
+          <AdvancedSearchDrawer
+            advancedSearchOpen={advancedSearchOpen}
+            searchParams={searchParams}
+          />
+        )}
         <Box
-          id="app-content"
+          className={className}
           sx={{
+            display: "flex",
+            flexFlow: "column",
+            height: "100vh",
             overflow: "auto",
-            height: "100%",
-            padding: 1
+            [theme.breakpoints.down("md")]: {
+              width: "auto",
+              height: "auto"
+            }
           }}
         >
+          <AppNavBar
+            advancedSearchOpen={advancedSearchOpen}
+            setAdvancedSearchOpen={setAdvancedSearchOpen}
+          />
           <Outlet />
         </Box>
-      </Initialize>
-    </Stack>
+      </Box>
+    </Initialize>
   );
-};
-
+})({
+  "& > *": {
+    minHeight: 0
+  }
+});
 export default App;
