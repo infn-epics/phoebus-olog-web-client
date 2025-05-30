@@ -27,6 +27,7 @@ import {
 } from "@mui/material";
 import { FileImage, isImage } from "./AttachmentImage";
 import Modal from "components/shared/Modal";
+import OlogAttachment from "components/log/EntryEditor/Description/OlogAttachment";
 
 const ImageContainer = styled("div")`
   display: flex;
@@ -59,18 +60,33 @@ const StyledAttachmentImage = styled(FileImage)`
   object-fit: contain;
   overflow: hidden;
   flex-grow: 1;
+  width: auto;
+  height: auto;
+  display: block;
 `;
 
 const Attachment = ({ attachment, removeAttachment, disabled, className }) => {
   const [showPreview, setShowPreview] = useState(false);
-
   const previewImage = () => {
     setShowPreview(true);
   };
 
   const attachmentFileName = attachment?.file?.name ?? attachment?.filename;
 
-  const image = <StyledAttachmentImage attachment={attachment} />;
+  const ologAtt = new OlogAttachment({ attachment: attachment });
+  const imageUrl = ologAtt?.url;
+
+  let image;
+  if (ologAtt && attachment.url == null) {
+    image = (
+      <StyledAttachmentImage
+        attachment={{ ...attachment, url: imageUrl }}
+        alt={attachmentFileName}
+      />
+    );
+  } else {
+    image = <StyledAttachmentImage attachment={attachment} />;
+  }
 
   return (
     <>

@@ -37,7 +37,8 @@ const EditLog = ({ log, isAuthenticated }) => {
       properties: formData.properties,
       title: formData.title,
       level: formData.level,
-      description: formData.description
+      description: formData.description,
+      attachments: formData.attachments ?? []
     };
 
     // Verify the group id hasn't been somehow edited
@@ -93,7 +94,7 @@ const EditLog = ({ log, isAuthenticated }) => {
           title: `Edit Log "${log?.title}"`,
           onSubmit,
           submitDisabled: !isAuthenticated,
-          attachmentsDisabled: true
+          attachmentsDisabled: false
         }}
       />
     </>
