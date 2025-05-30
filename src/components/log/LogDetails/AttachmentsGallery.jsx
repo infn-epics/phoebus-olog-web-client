@@ -57,7 +57,6 @@ const FileLink = ({ attachment, size }) => (
 
 const GalleryView = ({ attachments, onPrevious, onNext, currentIndex }) => {
   const attachment = attachments[currentIndex];
-
   return (
     <Stack
       alignItems="center"

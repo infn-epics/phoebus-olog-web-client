@@ -23,6 +23,8 @@ export const FileImage = ({ attachment, alt, className, ...props }) => {
       alignItems="center"
       position="relative"
       className={className}
+      width="100%"
+      height="100%"
       {...props}
     >
       <Box
@@ -42,6 +44,7 @@ export const FileImage = ({ attachment, alt, className, ...props }) => {
         alt={alt}
         style={{
           width: "100%",
+          height: "100%",
           objectFit: "contain",
           overflow: "hidden"
         }}

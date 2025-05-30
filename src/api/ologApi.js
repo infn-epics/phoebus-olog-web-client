@@ -19,6 +19,7 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { useCallback } from "react";
 import customization from "config/customization";
+import OlogAttachment from "components/log/EntryEditor/Description/OlogAttachment";
 
 export function ologClientInfoHeader() {
   return {
@@ -200,11 +201,33 @@ export const ologApi = createApi({
       }
     }),
     editLog: builder.mutation({
-      query: ({ log }) => ({
-        url: `/logs/${log.id}?markup=commonmark`,
-        method: "POST",
-        body: log
-      })
+      query: ({ log }) => {
+        const bodyFormData = new FormData();
+
+        // Append all files. Each is added with name "files", and that is actually OK
+        if (log.attachments && log.attachments.length > 0) {
+          for (let i = 0; i < log.attachments.length; i++) {
+            if (log.attachments[i] instanceof OlogAttachment) {
+              bodyFormData.append(
+                "files",
+                log.attachments[i].file,
+                log.attachments[i].filename
+              );
+            }
+          }
+        }
+        // Log entry must be added as JSON blob, otherwise the content type cannot be set.
+        bodyFormData.append(
+          "logEntry",
+          new Blob([JSON.stringify(log)], { type: "application/json" })
+        );
+        return {
+          url: `/logs/${log.id}?markup=commonmark`,
+          method: "POST",
+          body: bodyFormData,
+          formData: true
+        };
+      }
     }),
     getUser: builder.query({
       query: () => ({
