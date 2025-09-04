@@ -39,18 +39,15 @@ const Image = styled(({ attachment, className }) => {
   }
 });
 
-const FileLink = ({ attachment, size }) => (
+const FileLink = ({ attachment }) => (
   <Link
     href={attachment.url}
     download
   >
     <FileImage
+      attachment={attachment}
       alt={`file: ${attachment.filename}`}
-      fontSize={size}
-      sx={{
-        height: size,
-        width: size
-      }}
+      fontSize={90}
     />
   </Link>
 );
@@ -112,7 +109,7 @@ const GalleryView = ({ attachments, onPrevious, onNext, currentIndex }) => {
   );
 };
 
-const AttachmentsGallery = ({ attachments, size = 100 }) => {
+const AttachmentsGallery = ({ attachments, size = 85 }) => {
   const [show, setShow] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -150,19 +147,20 @@ const AttachmentsGallery = ({ attachments, size = 100 }) => {
   const renderAttachmentTitle = (attachment) => {
     const splitArr = attachment.filename.split(".");
     const extension = splitArr[splitArr.length - 1];
-    return `${splitArr[0].substring(0, 9)}...${extension}`;
+    return `${splitArr[0].substring(0, 7)}...${extension}`;
   };
 
   return (
     <Stack
       mt={0.5}
-      gap={1}
+      gap={1.5}
       flexWrap={"wrap"}
       flexDirection="row"
       onKeyUp={onKeyPress}
     >
       {imageAttachments.map((attachment, index) => (
-        <Box
+        <Stack
+          alignItems="center"
           key={attachment.id}
           onClick={() => onClick(index)}
           sx={{ cursor: "pointer" }}
@@ -177,16 +175,18 @@ const AttachmentsGallery = ({ attachments, size = 100 }) => {
             fontSize="small"
             sx={{
               "& div": {
-                fontSize: "0.8rem",
+                fontSize: "0.775rem",
                 fontStyle: "italic",
-                paddingBottom: 0
+                padding: 0,
+                margin: "4px 0 10px"
               }
             }}
           />
-        </Box>
+        </Stack>
       ))}
       {fileAttachments.map((attachment) => (
         <Stack
+          alignItems="center"
           key={attachment.id}
           sx={{
             cursor: "pointer",
@@ -198,13 +198,14 @@ const AttachmentsGallery = ({ attachments, size = 100 }) => {
           <FileLink
             key={attachment.id}
             attachment={attachment}
-            size={size}
           />
           <Stack flexDirection="row">
             <Typography
-              pl={2}
-              sx={{ fontSize: "0.8rem", fontStyle: "italic" }}
-              mt={1}
+              sx={{
+                fontSize: "0.775rem",
+                fontStyle: "italic",
+                margin: "5px 0 10px"
+              }}
             >
               {renderAttachmentTitle(attachment)}
             </Typography>

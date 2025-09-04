@@ -1,6 +1,6 @@
 import { Paper } from "@mui/material";
 import moment from "moment/moment";
-import { rest } from "msw";
+import { http, HttpResponse, delay } from "msw";
 import { SearchResultGroupItem } from "components/search/SearchResultList/SearchResultGroupItem";
 import { SearchResultList } from "components/search/SearchResultList";
 import {
@@ -146,7 +146,6 @@ const SearchResultListTemplate = ({ ...props }) => {
 export const Default = (args) => <SearchResultListTemplate {...args} />;
 Default.args = {
   logs: [log0, log1, log2, log3, log4, log5],
-  dateDescending: true,
   selectedId: 1
 };
 Default.argTypes = {
@@ -157,8 +156,10 @@ Default.argTypes = {
 Default.parameters = {
   msw: {
     handlers: [
-      rest.get("**/logs?properties=Log**", (req, res, ctx) => {
-        return res(ctx.delay(1000), ctx.json([...replies]));
+      http.get("**/logs?properties=Log*", async () => {
+        // Add delay if needed
+        await delay();
+        return HttpResponse.json([...replies]);
       })
     ]
   }
@@ -181,7 +182,6 @@ const replies = [log1, log2, log3, log4]; // BE replies are a flat group that in
 export const ReplyItem = (args) => <ReplyItemTemplate {...args} />;
 ReplyItem.args = {
   log: log2,
-  dateDescending: true,
   selectedId: 1
 };
 ReplyItem.argTypes = {
@@ -196,8 +196,11 @@ ReplyItemError.args = { ...ReplyItem.args };
 ReplyItemError.parameters = {
   msw: {
     handlers: [
-      rest.get("**/logs?properties=Log**", (req, res, ctx) => {
-        return res(ctx.delay(1000), ctx.status(400));
+      http.get("**/logs?properties=Log*", async () => {
+        // Add delay
+        await delay();
+        // Return 400 status
+        return HttpResponse.json(null, { status: 400 });
       })
     ]
   }

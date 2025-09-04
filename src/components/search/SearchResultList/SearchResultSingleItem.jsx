@@ -6,6 +6,9 @@ import { FormattedDate } from "components/shared/FormattedDate";
 import { LogbookChip } from "src/components/log/LogbookChip";
 import { TagChip } from "src/components/log/TagChip";
 import { CommonMark } from "components/shared/CommonMark";
+import { EntryTypeChip } from "src/components/log/EntryTypeChip";
+import { useAdvancedSearch } from "src/features/advancedSearchReducer";
+import { useEnhancedSearchParams } from "src/hooks/useEnhancedSearchParams";
 
 export const SearchResultSingleItem = ({
   log,
@@ -17,10 +20,12 @@ export const SearchResultSingleItem = ({
   isNestedReply,
   isParentNestedLog
 }) => {
+  const { isSearchActive } = useEnhancedSearchParams();
+  const { condensedEntries } = useAdvancedSearch();
   return (
     <Stack
       px={4}
-      py={0.5}
+      py={!condensedEntries ? 0.6 : 0.8}
       sx={{
         position: "relative",
         borderBottom: "1px solid #dedede",
@@ -137,16 +142,18 @@ export const SearchResultSingleItem = ({
         </Stack>
       </Stack>
 
-      <CommonMark
-        commonmarkSrc={log.source}
-        isSummary
-        sx={{
-          fontSize: isNestedReply ? ".75rem" : ".8rem",
-          margin: 0
-        }}
-      />
+      {!condensedEntries && (
+        <CommonMark
+          commonmarkSrc={log.source}
+          isSummary
+          sx={{
+            fontSize: isNestedReply ? ".75rem" : ".8rem",
+            margin: 0
+          }}
+        />
+      )}
 
-      {!isNestedReply && (
+      {!isNestedReply && !condensedEntries && (
         <Stack
           mt={0.5}
           mb={0.5}
@@ -171,6 +178,13 @@ export const SearchResultSingleItem = ({
               value={it.name}
             />
           ))}
+          {isSearchActive && (
+            <EntryTypeChip
+              sx={{ fontSize: ".65rem", height: "20px" }}
+              key={log?.level}
+              value={log?.level}
+            />
+          )}
         </Stack>
       )}
       {expandIcon}

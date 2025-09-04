@@ -1,15 +1,20 @@
 import { useEffect } from "react";
 import { Box, Button, Stack } from "@mui/material";
+import { useDispatch } from "react-redux";
 import { useForm } from "react-hook-form";
 import { useTheme } from "@mui/material/styles";
-import { useDispatch } from "react-redux";
 import { TextInput } from "components/shared/input/TextInput";
 import WizardDateInput from "components/shared/input/WizardDateInput";
 import EntryTypeSelect from "components/shared/input/managed/EntryTypeSelect";
 import LogbooksMultiSelect from "components/shared/input/managed/LogbooksMultiSelect";
 import TagsMultiSelect from "components/shared/input/managed/TagsMultiSelect";
-import { defaultSearchParams } from "features/searchParamsReducer";
-import { updateAdvancedSearch } from "src/features/advancedSearchThunk";
+import { Checkbox } from "components/shared/input/Checkbox";
+import { ologApi } from "src/api/ologApi";
+import {
+  updateAdvancedSearch,
+  useAdvancedSearch
+} from "src/features/advancedSearchReducer";
+import { useEnhancedSearchParams } from "src/hooks/useEnhancedSearchParams";
 
 const toDate = (dateString) => {
   if (dateString) {
@@ -19,31 +24,56 @@ const toDate = (dateString) => {
   }
 };
 
-export const AdvancedSearchDrawer = ({ searchParams, advancedSearchOpen }) => {
+export const AdvancedSearchDrawer = ({ advancedSearchOpen }) => {
+  const theme = useTheme();
   const dispatch = useDispatch();
+
+  const { searchParams, setSearchParams } = useEnhancedSearchParams();
+  const { groupedReplies, condensedEntries } = useAdvancedSearch();
+
   const form = useForm({
-    defaultValues: defaultSearchParams
+    defaultValues: {
+      title: "",
+      desc: "",
+      properties: "",
+      level: [],
+      logbooks: [],
+      tags: [],
+      owner: "",
+      start: null,
+      end: null,
+      attachments: "",
+      groupedReplies: true,
+      condensedEntries: false
+    }
   });
   const { control, handleSubmit, getValues } = form;
 
+  const { data: levels } = ologApi.endpoints.getLevels.useQuery();
+  const { data: logbooks } = ologApi.endpoints.getLogbooks.useQuery();
+  const { data: tags } = ologApi.endpoints.getTags.useQuery();
+
   useEffect(() => {
-    form.reset(searchParams);
-  }, [form, searchParams]);
+    form.reset({ ...searchParams, groupedReplies, condensedEntries });
+  }, [condensedEntries, form, groupedReplies, searchParams]);
 
   const clearFilters = () => {
-    dispatch(updateAdvancedSearch(defaultSearchParams));
-    form.reset(defaultSearchParams);
+    setSearchParams({});
   };
 
   const applyFilters = () => {
-    dispatch(updateAdvancedSearch(getValues()));
+    setSearchParams(getValues());
   };
 
   const handleSelectChange = (field, value) => {
     field.onChange(value);
     applyFilters();
   };
-  const theme = useTheme();
+
+  const handleCheckboxChange = (field, value) => {
+    field.onChange(value);
+    dispatch(updateAdvancedSearch({ [field.name]: value }));
+  };
 
   return (
     <Box
@@ -91,17 +121,18 @@ export const AdvancedSearchDrawer = ({ searchParams, advancedSearchOpen }) => {
         <EntryTypeSelect
           onChange={handleSelectChange}
           control={control}
-          getOptionLabel={(level) => level?.name || ""}
-          isOptionEqualToValue={(option, value) => option?.name === value?.name}
+          options={levels?.map((level) => level.name)}
           isMulti
         />
         <LogbooksMultiSelect
           onChange={handleSelectChange}
           control={control}
+          options={logbooks?.map((logbook) => logbook.name)}
         />
         <TagsMultiSelect
           onChange={handleSelectChange}
           control={control}
+          options={tags?.map((tag) => tag.name)}
         />
         <TextInput
           name="owner"
@@ -167,15 +198,28 @@ export const AdvancedSearchDrawer = ({ searchParams, advancedSearchOpen }) => {
           control={control}
           defaultValue=""
         />
+
         <Stack
-          flexDirection="row"
-          justifyContent="flex-end"
+          flexDirection="column"
+          alignItems="flex-start"
         >
+          <Checkbox
+            name="groupedReplies"
+            label="Grouped replies"
+            control={control}
+            onChange={handleCheckboxChange}
+          />
+          <Checkbox
+            name="condensedEntries"
+            label="Condensed entries"
+            control={control}
+            onChange={handleCheckboxChange}
+          />
           <Button
             onClick={clearFilters}
-            sx={{ marginRight: "10px" }}
+            sx={{ margin: "12px 0 0 4px" }}
           >
-            Clear filters
+            Reset filters
           </Button>
           <Button
             type="submit"

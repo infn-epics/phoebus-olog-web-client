@@ -10,10 +10,10 @@ import { KeyValueTable } from "./KeyValueTable";
 
 const AccordionSummaryStyles = {
   "& > .MuiAccordionSummary-content": {
-    margin: "10px 0"
+    margin: "4px 0"
   },
   "& > .MuiAccordionSummary-content.Mui-expanded": {
-    margin: "20px 0 5px"
+    margin: "10px 0 5px"
   }
 };
 
@@ -47,10 +47,16 @@ const LogProperty = styled(({ property, className }) => {
   );
 })(({ theme }) => ({
   padding: 2,
-  marginBottom: 8,
   border: 0,
   backgroundColor: `${theme.palette.primary.main}10`,
   borderLeft: `${theme.palette.primary.main} solid 5px`,
+  borderRadius: 4,
+  transition: "height .2s ease-in-out",
+  height: "34px",
+  "&.Mui-expanded": {
+    margin: 0,
+    height: "100%"
+  },
   "& > .MuiButtonBase-root, .MuiButtonBase-root.Mui-expanded": {
     minHeight: "auto"
   },
