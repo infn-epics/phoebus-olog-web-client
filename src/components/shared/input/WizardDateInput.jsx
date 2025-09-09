@@ -115,7 +115,10 @@ const ButtonField = ({
       aria-label={ariaLabel}
       onClick={() => setOpen?.((prev) => !prev)}
     >
-      <CalendarMonthIcon color={disabled ? "disabled" : "secondary"} />
+      <CalendarMonthIcon
+        sx={{ width: "1.4rem", height: "1.4rem" }}
+        color={disabled ? "disabled" : "secondary"}
+      />
     </IconButton>
   );
 };
@@ -172,6 +175,7 @@ const WizardDateInput = styled(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     onChange,
     DatePickerProps,
+    applyFilters,
     ...props
   }) => {
     const { control, setValue, trigger } = form;
@@ -186,6 +190,7 @@ const WizardDateInput = styled(
           shouldValidate: true
         });
         trigger(name === "start" ? "end" : "start");
+        applyFilters();
       }
     };
 
@@ -213,6 +218,14 @@ const WizardDateInput = styled(
         }}
         {...field}
         value={field.value ?? ""}
+        sx={{
+          "& .MuiFormLabel-root": {
+            fontSize: ".9rem",
+            top: "-4px"
+          },
+          "& .MuiInputLabel-shrink": { top: "0" },
+          "& .MuiInputBase-input": { padding: "12.5px 15px", fontSize: ".9rem" }
+        }}
         {...props}
       />
     );

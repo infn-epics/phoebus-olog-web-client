@@ -1,17 +1,17 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { Backdrop, CircularProgress } from "@mui/material";
 import { EntryEditor } from "../EntryEditor";
 import { ologApi, useVerifyLogExists } from "api/ologApi";
-import useBetaNavigate from "hooks/useBetaNavigate";
 import { useAuthData } from "src/auth/authContext";
 
 const EditLog = ({ log, isAuthenticated }) => {
   const [editInProgress, setEditInProgress] = useState(false);
   const [editLog] = ologApi.endpoints.editLog.useMutation();
   const verifyLogExists = useVerifyLogExists();
-  const navigate = useBetaNavigate();
-  const { token, tokenData, logIn, logOut } = useAuthData();
+  const { token } = useAuthData();
+  const navigate = useNavigate();
 
   const existingLogGroup = log?.properties
     ?.filter((it) => it.name === "Log Entry Group")
@@ -21,7 +21,11 @@ const EditLog = ({ log, isAuthenticated }) => {
     defaultValues: {
       attachments: []
     },
-    values: { ...log, description: log.source }
+    values: {
+      ...log,
+      description: log.source,
+      level: { name: log.level, defaultLevel: false }
+    }
   });
 
   const onSubmit = async (formData) => {
@@ -38,8 +42,9 @@ const EditLog = ({ log, isAuthenticated }) => {
       tags: formData.tags,
       properties: formData.properties,
       title: formData.title,
-      level: formData.level,
-      description: formData.description
+      level: formData.level?.name,
+      description: formData.description,
+      attachments: formData.attachments ?? []
     };
 
     // Verify the group id hasn't been somehow edited
@@ -92,10 +97,10 @@ const EditLog = ({ log, isAuthenticated }) => {
       <EntryEditor
         {...{
           form,
-          title: `Edit Log "${log?.title}" (id ${log?.id})`,
+          title: `Edit Log "${log?.title}"`,
           onSubmit,
           submitDisabled: !isAuthenticated,
-          attachmentsDisabled: true
+          attachmentsDisabled: false
         }}
       />
     </>

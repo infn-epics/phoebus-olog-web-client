@@ -60,13 +60,11 @@ Note that `VITE_APP_*` variables are only embedded during build time they cannot
 | Environment variable                                | Description                                                                                                                                                                                   |
 | --------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | VITE_APP_BASE_URL                                   | The [Phoebus Olog Backend](https://github.com/Olog/phoebus-olog) base URL (for example: `http://localhost:8080/Olog`). Default is the same host as the frontend; e.g. `http://localhost:3000` |
-| VITE_APP_ENABLE_BETA                                | Enables the Beta UI features if set to `"true"`. Disabled by default.                                                                                                                         |
 | VITE_APP_DOCS_HREF                                  | URL where more information can be found on Olog, shown on Help page;                                                                                                                          |
 | default is `https://olog.readthedocs.io/en/latest/` |
 | VITE_APP_SUPPORT_HREF                               | URL where support can be found for Olog. Shown on Help page only if provided.                                                                                                                 |
 | VITE_APP_VERSION                                    | Version string for Olog; default is the version defined in `package.json`.                                                                                                                    |
 | VITE_APP_VERSION_HREF                               | URL where this version of Olog can be found. Shown on Help page only if provided.                                                                                                             |
-| VITE_APP_LEVEL_VALUES                               | List of values in the "Level" drop-down. NOTE: If set on the command line, quotes must be escaped, e.g. VITE_APP_LEVEL_VALUES=[\\"foo\\",\\"bar\\"]                                           |
 
 ## Development
 

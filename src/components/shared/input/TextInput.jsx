@@ -2,7 +2,7 @@ import { useController } from "react-hook-form";
 import { TextField, styled } from "@mui/material";
 
 export const TextInput = styled(
-  ({ name, label, control, rules, defaultValue, ...props }) => {
+  ({ name, label, control, rules, defaultValue, inputRef, ...props }) => {
     const {
       field: { ...field },
       fieldState
@@ -14,7 +14,20 @@ export const TextInput = styled(
         label={label}
         helperText={fieldState?.error?.message}
         error={Boolean(fieldState?.error)}
-        inputRef={field.ref}
+        inputRef={(e) => {
+          field.ref(e);
+          if (inputRef) {
+            inputRef.current = e;
+          }
+        }}
+        sx={{
+          "& .MuiFormLabel-root": {
+            fontSize: ".9rem",
+            top: "-4px"
+          },
+          "& .MuiInputLabel-shrink": { top: 0 },
+          "& .MuiInputBase-input": { padding: "12.5px 15px", fontSize: ".9rem" }
+        }}
         {...field}
         {...props}
       />

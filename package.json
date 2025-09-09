@@ -1,7 +1,8 @@
 {
   "name": "Olog",
-  "version": "2.0.0",
+  "version": "2.4.0",
   "private": true,
+  "type": "module",
   "dependencies": {
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
@@ -17,7 +18,7 @@
     "markdown-it": "^14.1.0",
     "markdown-it-attrs": "^4.3.0",
     "moment": "^2.29.4",
-    "query-string": "^7.1.1",
+    "query-string": "^9.2.2",
     "react": "^18.1.0",
     "react-datetime-picker": "^3.0.4",
     "react-dom": "^18.1.0",
@@ -42,7 +43,6 @@
     "start": "vite",
     "build": "tsc && vite build",
     "serve": "vite preview",
-    "start-beta": "export VITE_APP_ENABLE_BETA=true && vite",
     "test": "vitest",
     "test:coverage": "vitest run --coverage --watch=false",
     "eslint": "npx eslint src",

@@ -1,30 +1,25 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { Backdrop, CircularProgress } from "@mui/material";
 import { EntryEditor } from "../EntryEditor";
-import customization from "config/customization";
 import { ologApi, useVerifyLogExists } from "api/ologApi";
-import useBetaNavigate from "hooks/useBetaNavigate";
 
 const ReplyLog = ({ log, isAuthenticated }) => {
   const [replyInProgress, setReplyInProgress] = useState(false);
   const [createLog] = ologApi.endpoints.createLog.useMutation();
   const verifyLogExists = useVerifyLogExists();
-  const navigate = useBetaNavigate();
+  const navigate = useNavigate();
 
   const form = useForm({
     defaultValues: {
       attachments: []
     },
     values: {
-      /**
-       * If currentLogEntry is defined, use it as a "template", i.e. user is replying to a log entry.
-       * Copy relevant fields to the state of this class EXCEPT FOR entryType/level.
-       * May or may not exist in the template.
-       */
+      attachments: [],
       logbooks: log?.logbooks ?? [],
       tags: log?.tags ?? [],
-      level: customization.defaultLevel,
+      level: { name: log?.level, defaultLevel: false },
       title: log?.title
     }
   });
@@ -41,7 +36,7 @@ const ReplyLog = ({ log, isAuthenticated }) => {
       tags: formData.tags,
       properties: formData.properties,
       title: formData.title,
-      level: formData.level,
+      level: formData.level?.name,
       description: formData.description,
       attachments: formData.attachments ?? []
     };
@@ -84,7 +79,7 @@ const ReplyLog = ({ log, isAuthenticated }) => {
       <EntryEditor
         {...{
           form,
-          title: `Reply to Log "${log?.title}" (id ${log?.id})`,
+          title: `Reply to Log "${log?.title}"`,
           onSubmit,
           submitDisabled: !isAuthenticated
         }}

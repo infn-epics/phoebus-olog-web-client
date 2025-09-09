@@ -25,16 +25,6 @@ let customization = {
    */
   level: "Entry Type",
   /**
-   * Values for the "level" drop-down.
-   */
-  levelValues: import.meta.env.VITE_APP_LEVEL_VALUES,
-
-  /**
-   * Default "level" for new log entries
-   */
-  defaultLevel: import.meta.env.VITE_APP_DEFAULT_LEVEL,
-
-  /**
    * Specifies whether to support grouping of log entries.
    */
   log_entry_groups_support: true,
@@ -62,16 +52,6 @@ let customization = {
   defaultSearchFrequency: 30000,
 
   /**
-   * Name of the cookie that stores the current search string
-   */
-  searchParamsCookie: "searchParams",
-
-  /**
-   * Name of the cookie that stores the current search string
-   */
-  searchPageParamsCookie: "searchPageParams",
-
-  /**
    * Max total attachment upload size and individual file size (MB)
    */
   defaultMaxRequestSizeMb: 100,
@@ -81,11 +61,6 @@ let customization = {
    * Base URL pointing to the Olog service. Required in order to support imbedded into the description (body) of a log entry.
    */
   APP_BASE_URL: import.meta.env.VITE_APP_BASE_URL, // e.g. http://localhost:8080/Olog
-
-  /**
-   * Enable/Disable the beta feature
-   */
-  ENABLE_BETA: import.meta.env.VITE_APP_ENABLE_BETA === "true",
 
   /**
    * Support and Docs URLs for Help page

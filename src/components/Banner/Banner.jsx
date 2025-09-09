@@ -31,13 +31,13 @@ import {
 } from "@mui/material";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import HelpCenterIcon from "@mui/icons-material/HelpCenter";
+import SkipToContent from "components/shared/SkipToContent";
 import packageInfo from "../../../package.json";
 import LogoutDialog from "../LoginLogout/LogoutDialog";
 import LoginDialog from "../LoginLogout/LoginDialog";
 import customization from "config/customization";
 import { useShowLogin, useShowLogout, useUser } from "features/authSlice";
 import { InternalButtonLink } from "components/shared/Link";
-import SkipToContent from "components/shared/SkipToContent";
 import { useAuthData } from "src/auth/authContext";
 
 /**

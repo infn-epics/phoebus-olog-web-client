@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { styled } from "@mui/material";
+import { styled, Typography } from "@mui/material";
 import markdownit from "markdown-it";
 import markdownItAttrs from "markdown-it-attrs";
 import DOMPurify from "dompurify";
 import HtmlContent from "./HtmlContent";
+import { parseEmbeddedImages } from "src/hooks/parseEmbeddedImages";
 
 const md = markdownit().use(markdownItAttrs);
 
@@ -17,7 +18,8 @@ export const CommonMark = styled(
   ({ commonmarkSrc, className, isSummary, isPreview, ...props }) => {
     const [html, setHtml] = useState("");
     useEffect(() => {
-      const renderedHtml = md.render(commonmarkSrc);
+      const parsedEmbeddedImages = parseEmbeddedImages(commonmarkSrc);
+      const renderedHtml = md.render(parsedEmbeddedImages ?? commonmarkSrc);
       if (isPreview) {
         setHtml(renderedHtml);
       } else {
@@ -29,10 +31,27 @@ export const CommonMark = styled(
     const summary =
       plainText.length > 100 ? `${plainText.slice(0, 100)}...` : plainText;
 
+    if (isSummary) {
+      return (
+        <Typography
+          className={className}
+          mb={0.2}
+          sx={{
+            maxHeight: "22px",
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis"
+          }}
+        >
+          {summary}
+        </Typography>
+      );
+    }
+
     return (
       <HtmlContent
         className={className}
-        html={isSummary ? summary : html}
+        html={html}
         {...props}
       />
     );

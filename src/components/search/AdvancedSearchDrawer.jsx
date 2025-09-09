@@ -1,0 +1,232 @@
+import { useEffect } from "react";
+import { Box, Button, Stack } from "@mui/material";
+import { useDispatch } from "react-redux";
+import { useForm } from "react-hook-form";
+import { useTheme } from "@mui/material/styles";
+import { TextInput } from "components/shared/input/TextInput";
+import WizardDateInput from "components/shared/input/WizardDateInput";
+import EntryTypeSelect from "components/shared/input/managed/EntryTypeSelect";
+import LogbooksMultiSelect from "components/shared/input/managed/LogbooksMultiSelect";
+import TagsMultiSelect from "components/shared/input/managed/TagsMultiSelect";
+import { Checkbox } from "components/shared/input/Checkbox";
+import { ologApi } from "src/api/ologApi";
+import {
+  updateAdvancedSearch,
+  useAdvancedSearch
+} from "src/features/advancedSearchReducer";
+import { useEnhancedSearchParams } from "src/hooks/useEnhancedSearchParams";
+
+const toDate = (dateString) => {
+  if (dateString) {
+    return new Date(dateString);
+  } else {
+    return null;
+  }
+};
+
+export const AdvancedSearchDrawer = ({ advancedSearchOpen }) => {
+  const theme = useTheme();
+  const dispatch = useDispatch();
+
+  const { searchParams, setSearchParams } = useEnhancedSearchParams();
+  const { groupedReplies, condensedEntries } = useAdvancedSearch();
+
+  const form = useForm({
+    defaultValues: {
+      title: "",
+      desc: "",
+      properties: "",
+      level: [],
+      logbooks: [],
+      tags: [],
+      owner: "",
+      start: null,
+      end: null,
+      attachments: "",
+      groupedReplies: true,
+      condensedEntries: false
+    }
+  });
+  const { control, handleSubmit, getValues } = form;
+
+  const { data: levels } = ologApi.endpoints.getLevels.useQuery();
+  const { data: logbooks } = ologApi.endpoints.getLogbooks.useQuery();
+  const { data: tags } = ologApi.endpoints.getTags.useQuery();
+
+  useEffect(() => {
+    form.reset({ ...searchParams, groupedReplies, condensedEntries });
+  }, [condensedEntries, form, groupedReplies, searchParams]);
+
+  const clearFilters = () => {
+    setSearchParams({});
+  };
+
+  const applyFilters = () => {
+    setSearchParams(getValues());
+  };
+
+  const handleSelectChange = (field, value) => {
+    field.onChange(value);
+    applyFilters();
+  };
+
+  const handleCheckboxChange = (field, value) => {
+    field.onChange(value);
+    dispatch(updateAdvancedSearch({ [field.name]: value }));
+  };
+
+  return (
+    <Box
+      sx={{
+        position: "static",
+        transition: "width 0.25s ease, padding 0.25s ease",
+        width: advancedSearchOpen ? "290px" : 0,
+        padding: advancedSearchOpen ? "18px 8px" : "18px 0",
+        height: "100vh",
+        overflow: "auto",
+        [theme.breakpoints.down("md")]: {
+          width: advancedSearchOpen ? "240px" : 0,
+          position: "fixed",
+          zIndex: 3,
+          backgroundColor: theme.palette.background.paper
+        }
+      }}
+    >
+      <Stack
+        component="form"
+        onSubmit={handleSubmit(applyFilters)}
+        aria-labelledby="advanced-search"
+        role="search"
+        gap={2}
+        px={1}
+      >
+        <TextInput
+          name="title"
+          label="Title"
+          control={control}
+          defaultValue=""
+        />
+        <TextInput
+          name="desc"
+          label="Description"
+          control={control}
+          defaultValue=""
+        />
+        <TextInput
+          name="properties"
+          label="Properties"
+          control={control}
+          defaultValue=""
+        />
+        <EntryTypeSelect
+          onChange={handleSelectChange}
+          control={control}
+          options={levels?.map((level) => level.name)}
+          isMulti
+        />
+        <LogbooksMultiSelect
+          onChange={handleSelectChange}
+          control={control}
+          options={logbooks?.map((logbook) => logbook.name)}
+        />
+        <TagsMultiSelect
+          onChange={handleSelectChange}
+          control={control}
+          options={tags?.map((tag) => tag.name)}
+        />
+        <TextInput
+          name="owner"
+          label="Author"
+          control={control}
+          defaultValue=""
+        />
+        <WizardDateInput
+          name="start"
+          label="Start Time"
+          form={form}
+          defaultValue={getValues("start")}
+          applyFilters={applyFilters}
+          DatePickerProps={{
+            disableFuture: true
+          }}
+          rules={{
+            validate: {
+              timeParadox: (val) => {
+                const startDate = toDate(val);
+                const endDate = toDate(getValues("end"));
+                if (startDate && endDate) {
+                  return (
+                    startDate <= endDate ||
+                    "Start date cannot come after end date"
+                  );
+                } else {
+                  return true;
+                }
+              }
+            }
+          }}
+        />
+        <WizardDateInput
+          name="end"
+          label="End Time"
+          form={form}
+          defaultValue={getValues("end")}
+          applyFilters={applyFilters}
+          DatePickerProps={{
+            disableFuture: true
+          }}
+          rules={{
+            validate: {
+              timeParadox: (val) => {
+                const startDate = toDate(getValues("start"));
+                const endDate = toDate(val);
+                if (startDate && endDate) {
+                  return (
+                    endDate > startDate ||
+                    "End date cannot come before start date"
+                  );
+                } else {
+                  return true;
+                }
+              }
+            }
+          }}
+        />
+        <TextInput
+          name="attachments"
+          label="Attachments"
+          control={control}
+          defaultValue=""
+        />
+
+        <Stack
+          flexDirection="column"
+          alignItems="flex-start"
+        >
+          <Checkbox
+            name="groupedReplies"
+            label="Grouped replies"
+            control={control}
+            onChange={handleCheckboxChange}
+          />
+          <Checkbox
+            name="condensedEntries"
+            label="Condensed entries"
+            control={control}
+            onChange={handleCheckboxChange}
+          />
+          <Button
+            onClick={clearFilters}
+            sx={{ margin: "12px 0 0 4px" }}
+          >
+            Reset filters
+          </Button>
+          <Button
+            type="submit"
+            sx={{ display: "none" }}
+          />
+        </Stack>
+      </Stack>
+    </Box>
+  );
+};

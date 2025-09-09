@@ -15,17 +15,22 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-
 import { useEffect, useRef, useState } from "react";
-import { Button, Stack, Typography } from "@mui/material";
+import { Button, Stack, Typography, Alert, Snackbar } from "@mui/material";
 import { Description } from "./Description";
 import { TextInput } from "components/shared/input/TextInput";
 import LogbooksMultiSelect from "components/shared/input/managed/LogbooksMultiSelect";
 import TagsMultiSelect from "components/shared/input/managed/TagsMultiSelect";
 import EntryTypeSelect from "components/shared/input/managed/EntryTypeSelect";
 import { PropertyCollectionInput } from "components/shared/input/managed/PropertyCollectionInput";
-
 import TemplateSelect from "components/shared/input/managed/TemplateSelect";
+import { ologApi } from "api/ologApi.js";
+
+const errorText =
+  "Misconfigured level values. Please contact your administrator.";
+
+const getOptionLabel = (option) => option.name;
+const isOptionEqualToValue = (option, value) => option.name === value.name;
 
 export const EntryEditor = ({
   form,
@@ -35,9 +40,30 @@ export const EntryEditor = ({
   attachmentsDisabled
 }) => {
   const topElem = useRef();
-  const { control, handleSubmit, formState } = form;
   const [selectedSource, setSelectedSource] = useState("");
+  const { control, handleSubmit, formState, setValue } = form;
 
+  // const { data: levels } = ologApi.endpoints.getLevels.useQuery();
+  // const defaultLevel = levels?.find((level) => level?.defaultLevel);
+
+  // useEffect(() => {
+  //   if (!attachmentsDisabled) {
+  //     setTimeout(() => {
+  //       setValue("level", defaultLevel?.name);
+  //     }, 0);
+  //   }
+  // }, [defaultLevel, setValue, attachmentsDisabled]);
+  const { data: logbooks } = ologApi.endpoints.getLogbooks.useQuery();
+  const { data: tags } = ologApi.endpoints.getTags.useQuery();
+  const { data: levels, error: levelsError } =
+    ologApi.endpoints.getLevels.useQuery();
+  const [showLevelsError, setShowLevelsError] = useState(false);
+
+  useEffect(() => {
+    if (levelsError) {
+      setShowLevelsError(true);
+    }
+  }, [levelsError]);
   // Scroll to top if there are field errors
   useEffect(() => {
     if (Object.keys(formState.errors).length > 0) {
@@ -48,7 +74,7 @@ export const EntryEditor = ({
         topElem.current.scrollIntoView({ behavior: "smooth" });
       }
     }
-  }, [formState]);
+  }, [formState, setValue]);
 
   return (
     <Stack
@@ -64,7 +90,8 @@ export const EntryEditor = ({
       <Typography
         component="h2"
         variant="h3"
-        py={2}
+        fontSize="2rem"
+        py={1}
       >
         {title}
       </Typography>
@@ -75,18 +102,14 @@ export const EntryEditor = ({
       >
         <span ref={topElem} />
         <TemplateSelect
+          control={control}
           rules={{
             validate: {
               notEmpty: (val) => val?.length > 0 || "Please select a template"
             }
           }}
-          control={control}
           onChange={(template) => {
-            // Cerca il template selezionato usando il suo ID
-            const selectedTemplate = template;
-
-            // Se esiste, aggiorna lo stato con il valore `source`
-            setSelectedSource(selectedTemplate || "");
+            setSelectedSource(template || "");
           }}
         />
         <LogbooksMultiSelect
@@ -97,17 +120,41 @@ export const EntryEditor = ({
                 val?.length > 0 || "Select at least one logbook"
             }
           }}
+          options={logbooks}
+          getOptionLabel={getOptionLabel}
+          isOptionEqualToValue={isOptionEqualToValue}
         />
-        <TagsMultiSelect control={control} />
+        <TagsMultiSelect
+          control={control}
+          options={tags}
+          getOptionLabel={getOptionLabel}
+          isOptionEqualToValue={isOptionEqualToValue}
+        />
         <EntryTypeSelect
           rules={{
             validate: {
-              notEmpty: (val) =>
-                val?.length > 0 || "Please select an Entry Type"
+              notEmpty: (val) => {
+                return val || "Please select an Entry Type";
+              }
             }
           }}
           control={control}
+          options={levels}
+          getOptionLabel={getOptionLabel}
+          isOptionEqualToValue={isOptionEqualToValue}
         />
+        <Snackbar
+          open={showLevelsError}
+          autoHideDuration={6000}
+        >
+          <Alert
+            severity="error"
+            variant="filled"
+            onClose={() => setShowLevelsError(false)}
+          >
+            {errorText}
+          </Alert>
+        </Snackbar>
         <TextInput
           name="title"
           label="Title"

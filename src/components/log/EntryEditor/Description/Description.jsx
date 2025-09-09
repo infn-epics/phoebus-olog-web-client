@@ -7,7 +7,7 @@ import {
   Typography,
   styled
 } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useFieldArray } from "react-hook-form";
 import { v4 as uuidv4 } from "uuid";
 import { FaMarkdown } from "react-icons/fa";
@@ -21,12 +21,14 @@ import { TextInput } from "components/shared/input/TextInput";
 import Attachment from "components/Attachment/Attachment";
 import customization from "config/customization";
 import { DroppableFileUploadInput } from "components/shared/input/FileInput";
+import { parseUrlToMarkdown } from "src/hooks/parseUrlToMarkdown";
 
 const RenderedAttachmentsContainer = styled("div")(
   ({ hasAttachments, theme }) => ({
     display: hasAttachments ? "grid" : "flex",
     placeItems: "center",
     gridTemplateColumns: "repeat(auto-fill, 10rem)",
+    gridAutoRows: "10rem",
     gridTemplateRows: "repeat(auto-fill, 10rem)",
     flexDirection: "row",
     alignItems: "center",
@@ -39,6 +41,7 @@ const RenderedAttachmentsContainer = styled("div")(
 
 const Description = ({ form, attachmentsDisabled, selectedSource }) => {
   const { control, formState, getValues, setValue } = form;
+  const descriptionRef = useRef();
 
   const [maxRequestSizeMb, setMaxRequestSizeMb] = useState(
     customization.defaultMaxRequestSizeMb
@@ -88,6 +91,13 @@ const Description = ({ form, attachmentsDisabled, selectedSource }) => {
 
   const { data: serverInfo } = ologApi.endpoints.getServerInfo.useQuery();
 
+  const generateUniqueFileName = (file) => {
+    return new File([file], `${new Date().getTime()}-${file.name}`, {
+      type: file.type,
+      lastModified: file.lastModified
+    });
+  };
+
   /**
    * Appends an attachment object to the attachments form field
    * @param {*} event
@@ -96,7 +106,12 @@ const Description = ({ form, attachmentsDisabled, selectedSource }) => {
     if (files) {
       // note event.target.files is a FileList, not an array! But we can convert it
       Array.from(files).forEach((file) => {
-        appendAttachment(new OlogAttachment({ file, id: uuidv4() }));
+        appendAttachment(
+          new OlogAttachment({
+            file: generateUniqueFileName(file),
+            id: uuidv4()
+          })
+        );
       });
     }
   };
@@ -116,21 +131,42 @@ const Description = ({ form, attachmentsDisabled, selectedSource }) => {
   };
 
   const handlePaste = (e) => {
-    if (attachmentsDisabled) {
-      return;
-    }
-    const items = e.clipboardData.items;
-    let imageFile = null;
+    e.preventDefault();
+    const items = Array.from(e.clipboardData.items);
     for (let item of items) {
       if (item.kind === "file" && item.type.match(/^image/)) {
-        imageFile = item.getAsFile();
+        const imageFile = item.getAsFile();
+        if (!attachmentsDisabled && imageFile) {
+          setInitialImage(imageFile);
+          setShowEmbedImageDialog(true);
+        }
       }
-    }
-    if (imageFile) {
-      setInitialImage(imageFile);
-      setShowEmbedImageDialog(true);
-      // prevent paste of image 'text'
-      e.preventDefault();
+      // Makes sure that the text/html that comes from copied image is not pasted
+      const isImagePaste = items.some(
+        (i) => i.kind === "file" && i.type.startsWith("image/")
+      );
+      if (item.kind === "string" && item.type.match(/^text/) && !isImagePaste) {
+        item.getAsString((text) => {
+          const { parsedContent, cursorPosition } = parseUrlToMarkdown(
+            text,
+            descriptionRef
+          );
+
+          setValue("description", parsedContent, {
+            shouldDirty: false,
+            shouldTouch: false,
+            shouldValidate: false
+          });
+
+          // Set correct cursor position after paste
+          setTimeout(() => {
+            if (descriptionRef.current) {
+              descriptionRef.current.selectionStart = cursorPosition;
+              descriptionRef.current.selectionEnd = cursorPosition;
+            }
+          }, 0);
+        });
+      }
     }
   };
 
@@ -142,8 +178,10 @@ const Description = ({ form, attachmentsDisabled, selectedSource }) => {
    */
   const addEmbeddedImage = (file, width, height) => {
     const id = uuidv4();
-    appendAttachment(new OlogAttachment({ file, id }));
-    const imageMarkup = `![](${customization.APP_BASE_URL}/attachment/${id}){width=${width} height=${height}}`;
+    appendAttachment(
+      new OlogAttachment({ file: generateUniqueFileName(file), id })
+    );
+    const imageMarkup = `![](attachment/${id}){width=${width} height=${height}}`;
     let description = getValues("description") || "";
     description += imageMarkup;
     setValue("description", description, {
@@ -153,6 +191,25 @@ const Description = ({ form, attachmentsDisabled, selectedSource }) => {
     });
   };
 
+  const handleClipboardAttach = async () => {
+    try {
+      const items = await navigator.clipboard.read();
+      for (const item of items) {
+        for (const type of item.types) {
+          if (type.startsWith("image/")) {
+            const blob = await item.getType(type);
+            const extension = type.split("/")[1];
+            const file = new File([blob], `clipboard-image.${extension}`, {
+              type: `image/${extension}`
+            });
+            onFileChanged([file]);
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Failed to read clipboard:", error);
+    }
+  };
   // Set the max attachment filesize
   useEffect(() => {
     if (selectedSource) {
@@ -193,7 +250,9 @@ const Description = ({ form, attachmentsDisabled, selectedSource }) => {
         defaultValue=""
         multiline
         minRows={10}
+        sx={{ "& .MuiInputBase-root": { padding: 0 } }}
         onPaste={handlePaste}
+        inputRef={descriptionRef}
       />
       <Stack
         direction="row"
@@ -236,15 +295,31 @@ const Description = ({ form, attachmentsDisabled, selectedSource }) => {
         </Stack>
       </Stack>
       <Stack>
-        <FormLabel htmlFor="attachments-upload">
-          {!attachmentsDisabled ? "Attachments" : "Attachments (Disabled)"}
-        </FormLabel>
-        {!attachmentsDisabled ? (
-          <Typography>
-            max size per file: {maxFileSizeMb}MB, max total size:{" "}
-            {maxRequestSizeMb}MB
-          </Typography>
-        ) : null}
+        <Stack
+          direction="column"
+          mt={3}
+          mb={1}
+        >
+          <Box>
+            <FormLabel
+              htmlFor="attachments-upload"
+              sx={{ color: "text.primary" }}
+            >
+              {!attachmentsDisabled ? "Attachments" : "Attachments (Disabled)"}{" "}
+              <br />
+              (max size per file: {maxFileSizeMb}MB, max total size:{" "}
+              {maxRequestSizeMb}MB)
+            </FormLabel>
+          </Box>
+          <Button
+            sx={{ mt: 1, width: "fit-content" }}
+            variant="outlined"
+            disabled={attachmentsDisabled}
+            onClick={handleClipboardAttach}
+          >
+            Attach image from clipboard
+          </Button>
+        </Stack>
         <Stack>
           <RenderedAttachmentsContainer
             hasAttachments={attachments && attachments.length > 0}

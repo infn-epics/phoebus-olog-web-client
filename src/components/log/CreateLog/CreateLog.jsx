@@ -1,25 +1,29 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import useFormPersist from "react-hook-form-persist";
 import { Backdrop, CircularProgress } from "@mui/material";
 import { EntryEditor } from "../EntryEditor";
 import { ologApi, useVerifyLogExists } from "api/ologApi";
-import useBetaNavigate from "hooks/useBetaNavigate";
 import { useAuthData } from "src/auth/authContext";
-
 const CreateLog = ({ isAuthenticated }) => {
   const [createInProgress, setCreateInProgress] = useState(false);
   const [createLog] = ologApi.endpoints.createLog.useMutation();
   const verifyLogExists = useVerifyLogExists();
-  const { token, tokenData, logIn, logOut } = useAuthData();
+  const { token } = useAuthData();
+  const { data: levels } = ologApi.endpoints.getLevels.useQuery();
+  const defaultLevel = levels?.find((level) => level?.defaultLevel);
 
   const form = useForm({
     defaultValues: {
       attachments: []
+    },
+    values: {
+      level: defaultLevel
     }
   });
   const { watch, setValue } = form;
-  const navigate = useBetaNavigate();
+  const navigate = useNavigate();
 
   /**
    * Save/restore form data
@@ -43,7 +47,7 @@ const CreateLog = ({ isAuthenticated }) => {
       tags: formData.tags,
       properties: formData.properties,
       title: formData.title,
-      level: formData.level,
+      level: formData.level?.name,
       description: formData.description,
       attachments: formData.attachments ?? []
     };

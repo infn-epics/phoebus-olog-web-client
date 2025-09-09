@@ -20,6 +20,7 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { useCallback } from "react";
 import customization from "config/customization";
 import { useAuthData } from "src/auth/authContext";
+import OlogAttachment from "components/log/EntryEditor/Description/OlogAttachment";
 
 export function ologClientInfoHeader() {
   return {
@@ -27,28 +28,6 @@ export function ologClientInfoHeader() {
       "Olog Web " + customization.VERSION + " on " + window.navigator.userAgent
   };
 }
-
-export const removeEmptyKeys = (obj, exceptions = []) => {
-  const copy = { ...obj };
-  for (let key of Object.keys(copy).filter(
-    (it) => exceptions.indexOf(it) === -1
-  )) {
-    const val = copy[key];
-    if (Array.isArray(val) && val.length === 0) {
-      delete copy[key];
-      continue;
-    }
-    if (typeof val === "string" || val instanceof String) {
-      if (val.trim() === "") {
-        delete copy[key];
-      }
-    }
-    if (val === undefined || val === null) {
-      delete copy[key];
-    }
-  }
-  return copy;
-};
 
 /**
  * A wrapper around setTimeout that allows awaiting a delay.
@@ -116,7 +95,8 @@ export const ologApi = createApi({
         attachments,
         from,
         size,
-        sort
+        sort,
+        getTemplate
       }) => {
         return {
           url: "/logs/search",
@@ -134,7 +114,8 @@ export const ologApi = createApi({
             attachments,
             from,
             size,
-            sort
+            sort,
+            getTemplate
           }
         };
       }
@@ -177,14 +158,20 @@ export const ologApi = createApi({
         const bodyFormData = new FormData();
 
         // Append all files. Each is added with name "files", and that is actually OK
-        if(log.attachments && log.attachments.length > 0) {
+        if (log.attachments && log.attachments.length > 0) {
           for (let i = 0; i < log.attachments.length; i++) {
-            bodyFormData.append("files", log.attachments[i].file, log.attachments[i].file.name);
+            bodyFormData.append(
+              "files",
+              log.attachments[i].file,
+              log.attachments[i].file.name
+            );
           }
         }
         // Log entry must be added as JSON blob, otherwise the content type cannot be set.
-        bodyFormData.append("logEntry", new Blob([JSON.stringify(log)], {type: 'application/json'}));
-
+        bodyFormData.append(
+          "logEntry",
+          new Blob([JSON.stringify(log)], { type: "application/json" })
+        );
         if (import.meta.env.VITE_REACT_APP_USE_KEYCLOAK) {
           return {
             url: `/logs/multipart?markup=commonmark${replyTo ? `&inReplyTo=${replyTo}` : ""}`,
@@ -198,23 +185,44 @@ export const ologApi = createApi({
         } else {
           return {
             url: `/logs/multipart?markup=commonmark${replyTo ? `&inReplyTo=${replyTo}` : ""}`,
-            method: 'PUT',
+            method: "PUT",
             body: bodyFormData,
             formData: true
+          };
+        }
+      }
+    }),
+    editLog: builder.mutation({
+      query: ({ log, token }) => {
+        const bodyFormData = new FormData();
+
+        // Append all files. Each is added with name "files", and that is actually OK
+        if (log.attachments && log.attachments.length > 0) {
+          for (let i = 0; i < log.attachments.length; i++) {
+            if (log.attachments[i] instanceof OlogAttachment) {
+              bodyFormData.append(
+                "files",
+                log.attachments[i].file,
+                log.attachments[i].filename
+              );
+            }
           }
         }
-
-            }
-        }),
-    editLog: builder.mutation({
-      query: ({ log, token }) => ({
-        url: `/logs/${log.id}?markup=commonmark`,
-        method: "POST",
-        body: log,
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      })
+        // Log entry must be added as JSON blob, otherwise the content type cannot be set.
+        bodyFormData.append(
+          "logEntry",
+          new Blob([JSON.stringify(log)], { type: "application/json" })
+        );
+        return {
+          url: `/logs/${log.id}?markup=commonmark`,
+          method: "POST",
+          body: bodyFormData,
+          formData: true,
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        };
+      }
     }),
     getUser: builder.query({
       query: () => ({
@@ -238,13 +246,18 @@ export const ologApi = createApi({
     }),
     getServerInfo: builder.query({
       query: () => ({
-          url: "/"
-        })
+        url: "/"
+      })
     }),
     getTemplates: builder.query({
       query: () => ({
         url: "/templates",
         method: "GET"
+      })
+    }),
+    getLevels: builder.query({
+      query: () => ({
+        url: "/levels"
       })
     })
   })
