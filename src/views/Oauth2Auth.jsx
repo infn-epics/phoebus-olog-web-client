@@ -15,9 +15,7 @@ const authService = {
   onRefreshTokenExpire: (event) => event.logIn(undefined, undefined, "popup")
 };
 
-
 const AUTH_METHOD = import.meta.env.VITE_REACT_APP_AUTH_METHOD || "custom";
-
 
 export function LoginInfo() {
   const { tokenData, token, logIn, logOut, error } = useContext(AuthContext);

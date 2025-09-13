@@ -10,7 +10,7 @@ const EditLog = ({ log, isAuthenticated }) => {
   const [editInProgress, setEditInProgress] = useState(false);
   const [editLog] = ologApi.endpoints.editLog.useMutation();
   const verifyLogExists = useVerifyLogExists();
-  const { token } = useAuthData();
+  const { token, isTokenExpired, logIn } = useAuthData();
   const navigate = useNavigate();
 
   const existingLogGroup = log?.properties
@@ -32,6 +32,19 @@ const EditLog = ({ log, isAuthenticated }) => {
     if (!formData || !isAuthenticated) {
       setEditInProgress(false);
       return;
+    }
+
+    // Verifica scadenza token prima di procedere
+    if (isTokenExpired()) {
+      // opzionale: puoi lanciare un re-login, o mostrare un messaggio all’utente
+      try {
+        await logIn(); // potrebbe fare redirect/popup a seconda della config
+        // Nota: se il flusso fa redirect, il codice dopo non verrà eseguito ora
+      } catch (e) {
+        alert("Sessione scaduta. Effettua nuovamente il login." + e.message);
+        setEditInProgress(false);
+        return;
+      }
     }
 
     setEditInProgress(true);

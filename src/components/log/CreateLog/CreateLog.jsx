@@ -10,10 +10,9 @@ const CreateLog = ({ isAuthenticated }) => {
   const [createInProgress, setCreateInProgress] = useState(false);
   const [createLog] = ologApi.endpoints.createLog.useMutation();
   const verifyLogExists = useVerifyLogExists();
-  const { token } = useAuthData();
   const { data: levels } = ologApi.endpoints.getLevels.useQuery();
   const defaultLevel = levels?.find((level) => level?.defaultLevel);
-
+  const { token, isTokenExpired, logIn } = useAuthData();
   const form = useForm({
     defaultValues: {
       attachments: []
@@ -41,6 +40,18 @@ const CreateLog = ({ isAuthenticated }) => {
       return;
     }
 
+    // Verifica scadenza token prima di procedere
+    if (isTokenExpired()) {
+      // opzionale: puoi lanciare un re-login, o mostrare un messaggio all’utente
+      try {
+        await logIn(); // potrebbe fare redirect/popup a seconda della config
+        // Nota: se il flusso fa redirect, il codice dopo non verrà eseguito ora
+      } catch (e) {
+        alert("Sessione scaduta. Effettua nuovamente il login." + e.message);
+        setCreateInProgress(false);
+        return;
+      }
+    }
     setCreateInProgress(true);
     const body = {
       logbooks: formData.logbooks,
