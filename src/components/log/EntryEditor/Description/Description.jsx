@@ -226,6 +226,7 @@ const Description = ({ form, attachmentsDisabled, selectedSource }) => {
       );
     }
   }, [serverInfo, selectedSource]);
+
   /**
    * If attachments are present, creates a wrapper containing an array of Attachment components
    */

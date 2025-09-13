@@ -212,7 +212,7 @@ const AppNavBar = ({ advancedSearchOpen, setAdvancedSearchOpen }) => {
                 variant="h6"
                 component="span"
               >
-                ESS Logbook
+                {import.meta.env.VITE_APP_LOGBOOK_NAME ?? "ESS Logbook"}
               </Typography>
             </Button>
             <nav aria-label="user menu">
@@ -267,6 +267,7 @@ const AppNavBar = ({ advancedSearchOpen, setAdvancedSearchOpen }) => {
                         onClick={() => setShowLogout(true)}
                         variant="outlined"
                         color="primary"
+                        sx={{ whiteSpace: "nowrap" }}
                       >
                         {user.userName}
                       </Button>

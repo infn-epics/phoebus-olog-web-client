@@ -19,6 +19,7 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { useCallback } from "react";
 import customization from "config/customization";
+import { useAuthData } from "src/auth/authContext";
 import OlogAttachment from "components/log/EntryEditor/Description/OlogAttachment";
 
 export function ologClientInfoHeader() {
@@ -153,7 +154,7 @@ export const ologApi = createApi({
       })
     }),
     createLog: builder.mutation({
-      query: ({ log, replyTo }) => {
+      query: ({ log, replyTo, token }) => {
         const bodyFormData = new FormData();
 
         // Append all files. Each is added with name "files", and that is actually OK
@@ -171,17 +172,28 @@ export const ologApi = createApi({
           "logEntry",
           new Blob([JSON.stringify(log)], { type: "application/json" })
         );
-
-        return {
-          url: `/logs/multipart?markup=commonmark${replyTo ? `&inReplyTo=${replyTo}` : ""}`,
-          method: "PUT",
-          body: bodyFormData,
-          formData: true
-        };
+        if (import.meta.env.VITE_REACT_APP_USE_KEYCLOAK) {
+          return {
+            url: `/logs/multipart?markup=commonmark${replyTo ? `&inReplyTo=${replyTo}` : ""}`,
+            method: "PUT",
+            body: bodyFormData,
+            formData: true,
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          };
+        } else {
+          return {
+            url: `/logs/multipart?markup=commonmark${replyTo ? `&inReplyTo=${replyTo}` : ""}`,
+            method: "PUT",
+            body: bodyFormData,
+            formData: true
+          };
+        }
       }
     }),
     editLog: builder.mutation({
-      query: ({ log }) => {
+      query: ({ log, token }) => {
         const bodyFormData = new FormData();
 
         // Append all files. Each is added with name "files", and that is actually OK
@@ -205,7 +217,10 @@ export const ologApi = createApi({
           url: `/logs/${log.id}?markup=commonmark`,
           method: "POST",
           body: bodyFormData,
-          formData: true
+          formData: true,
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
         };
       }
     }),

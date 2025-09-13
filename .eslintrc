@@ -37,6 +37,7 @@
           ["providers", "./src/providers"],
           ["features", "./src/features"],
           ["api", "./src/api"],
+          ["auth", "./src/auth"],
           ["lib", "./src/lib"],
           ["mocks", "./src/mocks"],
           ["stories", "./src/stories"],
