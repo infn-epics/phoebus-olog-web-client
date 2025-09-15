@@ -23,12 +23,14 @@ import Modal from "../shared/Modal";
 import { TextInput } from "components/shared/input/TextInput";
 import { ologApi } from "api/ologApi";
 import { useShowLogin } from "features/authSlice";
+import { useAuthData } from "src/auth/authContext.jsx";
 
 const LoginDialog = () => {
   const { control, handleSubmit, reset, resetField, setFocus } = useForm();
   const [loginErrorMessage, setLoginErrorMessage] = useState("");
-  const [login, { isSuccess, error }] = ologApi.endpoints.login.useMutation();
+  const [login, { isSuccess, error, isLoading }] = ologApi.endpoints.login.useMutation();
   const { showLogin, setShowLogin } = useShowLogin();
+  const { logIn: oauthLogIn } = useAuthData();
 
   const closeAndReset = () => {
     setLoginErrorMessage("");
@@ -38,8 +40,13 @@ const LoginDialog = () => {
   };
 
   const handleLogin = (data) => {
-    const { username, password } = data;
-    login({ username, password });
+    if (import.meta.env.VITE_APP_OAUTH2_ENABLED) {
+      // bypass login form, usa OAuth2
+      oauthLogIn();
+    } else {
+      const { username, password } = data;
+      login({ username, password });
+    }
   };
 
   // close the window if login was successful
@@ -85,48 +92,31 @@ const LoginDialog = () => {
           gap={2}
           marginY={2}
         >
-          <TextInput
-            name="username"
-            label="Username"
-            control={control}
-            defaultValue=""
-            sx={{
-              "& .MuiFormLabel-root": {
-                fontSize: "1rem",
-                top: 0
-              },
-              "& .MuiInputBase-input": {
-                padding: "16px 12px",
-                fontSize: "1rem"
-              }
-            }}
-          />
-          <TextInput
-            name="password"
-            label="Password"
-            control={control}
-            defaultValue=""
-            inputProps={{ type: "password" }}
-            sx={{
-              "& .MuiFormLabel-root": {
-                fontSize: "1rem",
-                top: 0
-              },
-              "& .MuiInputBase-input": {
-                padding: "16px 12px",
-                fontSize: "1rem"
-              }
-            }}
-          />
-          {/* Hidden button handles submit-on-enter automatically */}
+          {!import.meta.env.VITE_APP_OAUTH2_ENABLED && (
+            <>
+              <TextInput
+                name="username"
+                label="Username"
+                control={control}
+                defaultValue=""
+              />
+              <TextInput
+                name="password"
+                label="Password"
+                control={control}
+                defaultValue=""
+                inputProps={{ type: "password" }}
+              />
+            </>
+          )}
           <Button
             type="submit"
             hidden
             tabIndex={-1}
           />
-          {loginErrorMessage ? (
+          {loginErrorMessage && (
             <Alert severity="error">{loginErrorMessage}</Alert>
-          ) : null}
+          )}
         </Stack>
       }
       actions={
@@ -142,8 +132,14 @@ const LoginDialog = () => {
             variant="contained"
             type="submit"
             onClick={handleSubmit(handleLogin)}
+            disabled={isLoading}
           >
-            Login
+            {/* eslint-disable-next-line no-nested-ternary */}
+            {import.meta.env.VITE_APP_OAUTH2_ENABLED
+              ? "Login with OAuth2"
+              : isLoading
+                ? "Logging in..."
+                : "Login"}
           </Button>
         </>
       }

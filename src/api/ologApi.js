@@ -172,7 +172,7 @@ export const ologApi = createApi({
           "logEntry",
           new Blob([JSON.stringify(log)], { type: "application/json" })
         );
-        if (import.meta.env.VITE_REACT_APP_USE_KEYCLOAK) {
+        if (import.meta.env.VITE_APP_OAUTH2_ENABLED) {
           return {
             url: `/logs/multipart?markup=commonmark${replyTo ? `&inReplyTo=${replyTo}` : ""}`,
             method: "PUT",

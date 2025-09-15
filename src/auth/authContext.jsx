@@ -14,7 +14,8 @@ export const AuthDataProvider = ({ children }) => {
     setAuthState({ token, tokenData });
     if (tokenData) {
       let user = {
-        userName: tokenData.given_name + " " + tokenData.family_name,
+        userName:
+          `${tokenData?.given_name ?? ""} ${tokenData?.family_name ?? ""}`.trim(),
         uuid: tokenData.preferred_username,
         givenName: tokenData.given_name,
         familyName: tokenData.family_name,
@@ -23,7 +24,7 @@ export const AuthDataProvider = ({ children }) => {
       };
       dispatch(setUser(user)); // Aggiorna lo stato dell'utente in Redux
     }
-  }, [token, tokenData]);
+  }, [dispatch, token, tokenData]);
 
   // Funzioni di utilità per verificare scadenza token
   const timeToExpireMs = () => {

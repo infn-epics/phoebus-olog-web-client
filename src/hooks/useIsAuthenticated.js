@@ -12,7 +12,7 @@ const useIsAuthenticated = () => {
    * Show login if no session
    */
   useEffect(() => {
-    if (import.meta.env.VITE_REACT_APP_USE_KEYCLOAK === "false") {
+    if (import.meta.env.VITE_APP_OAUTH2_ENABLED === "false") {
       if (user) {
         setIsAuthenticated(true);
         setShowLogin(false);

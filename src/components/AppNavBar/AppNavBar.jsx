@@ -47,6 +47,7 @@ import { toggleSortOrder } from "features/searchPageParamsReducer";
 import { theme } from "src/config/theme";
 import { onHomePage } from "src/hooks/isHomePage";
 import { useEnhancedSearchParams } from "src/hooks/useEnhancedSearchParams";
+import { useAuthData } from "src/auth/authContext.jsx";
 
 const getFieldCount = (searchParams) => {
   let fieldCount = 0;
@@ -68,6 +69,8 @@ const AppNavBar = ({ advancedSearchOpen, setAdvancedSearchOpen }) => {
   const { setShowLogin } = useShowLogin();
   const { searchParams } = useEnhancedSearchParams();
   const { setShowLogout } = useShowLogout();
+  const { logIn: oauthLogIn } = useAuthData();
+
 
   const { pathname } = location;
 
@@ -274,7 +277,11 @@ const AppNavBar = ({ advancedSearchOpen, setAdvancedSearchOpen }) => {
                     </Box>
                   ) : (
                     <Button
-                      onClick={() => setShowLogin(true)}
+                      onClick={() =>
+                        import.meta.env.VITE_APP_OAUTH2_ENABLED
+                          ? oauthLogIn()
+                          : setShowLogin(true)
+                      }
                       variant="outlined"
                       color="inherit"
                       startIcon={<LockIcon />}

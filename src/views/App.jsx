@@ -27,6 +27,12 @@ import { AdvancedSearchDrawer } from "components/search/AdvancedSearchDrawer.jsx
 import { onHomePage } from "hooks/isHomePage.js";
 import { theme } from "src/config/theme";
 
+if (import.meta.env.VITE_APP_OAUTH2_ENABLED) {
+  console.info("[Auth] OAuth2 login mode ENABLED");
+} else {
+  console.info("[Auth] Classic username/password login mode ENABLED");
+}
+
 const authConfig = {
   clientId: import.meta.env.VITE_AUTH_CLIENT_ID,
   authorizationEndpoint: import.meta.env.VITE_AUTH_ENDPOINT,
