@@ -78,6 +78,12 @@ const AppNavBar = ({ advancedSearchOpen, setAdvancedSearchOpen }) => {
     dispatch(toggleSortOrder());
   };
 
+  if (import.meta.env.VITE_APP_OAUTH2_ENABLED) {
+    console.info("[Auth] OAuth2 login mode ENABLED");
+  } else {
+    console.info("[Auth] Classic username/password login mode ENABLED");
+  }
+
   return (
     <Initialize>
       <AppBar
