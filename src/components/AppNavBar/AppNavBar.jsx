@@ -71,11 +71,21 @@ const AppNavBar = ({ advancedSearchOpen, setAdvancedSearchOpen }) => {
   const { setShowLogout } = useShowLogout();
   const { logIn: oauthLogIn } = useAuthData();
 
-
   const { pathname } = location;
 
   const toggleSort = () => {
     dispatch(toggleSortOrder());
+  };
+
+  const performLogin = () => {
+    console.info("[Auth] Performing login");
+    if (import.meta.env.VITE_APP_OAUTH2_ENABLED) {
+      console.info("[Auth] OAuth2 login mode ENABLED");
+      oauthLogIn();
+    } else {
+      console.info("[Auth] Classic username/password login mode ENABLED");
+      setShowLogin(true);
+    }
   };
 
   if (import.meta.env.VITE_APP_OAUTH2_ENABLED) {
@@ -283,11 +293,7 @@ const AppNavBar = ({ advancedSearchOpen, setAdvancedSearchOpen }) => {
                     </Box>
                   ) : (
                     <Button
-                      onClick={() =>
-                        import.meta.env.VITE_APP_OAUTH2_ENABLED
-                          ? oauthLogIn()
-                          : setShowLogin(true)
-                      }
+                      onClick={() => performLogin()}
                       variant="outlined"
                       color="inherit"
                       startIcon={<LockIcon />}
