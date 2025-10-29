@@ -39,6 +39,7 @@ const CreateLog = ({ isAuthenticated }) => {
       setCreateInProgress(false);
       return;
     }
+    console.debug({ formData });
 
     // Verifica scadenza token prima di procedere
     if (isTokenExpired()) {

@@ -39,12 +39,14 @@ const authConfig = {
   tokenEndpoint: import.meta.env.VITE_AUTH_ENDPOINT_TOKEN,
   redirectUri: import.meta.env.VITE_AUTH_ENDPOINT_REDIRECT_URI,
   scope: import.meta.env.VITE_AUTH_SCOPE,
-  tokenExpiresIn: 3600,
+  tokenExpiresIn: 10,
+  autoRefreshToken: true,
   logoutEndpoint:
     import.meta.env.VITE_AUTH_ENDPOINT_LOGOUT +
     "?redirect_uri=" +
     import.meta.env.VITE_AUTH_ENDPOINT_REDIRECT_URI,
-  onRefreshTokenExpire: (event) => event.logIn(undefined, undefined, "redirect")
+  onRefreshTokenExpire: (event) => event.logIn(undefined, undefined, "redirect"),
+  onLogin: (event) => event.logIn(undefined, undefined, "popup")
 };
 
 const Overlay = styled("div")(({ theme }) => ({

@@ -38,7 +38,8 @@ const EditLog = ({ log, isAuthenticated }) => {
     if (isTokenExpired()) {
       // opzionale: puoi lanciare un re-login, o mostrare un messaggio all’utente
       try {
-        await logIn(); // potrebbe fare redirect/popup a seconda della config
+        localStorage.setItem("formDataBackup", JSON.stringify(formData));
+        // await logIn(); // potrebbe fare redirect/popup a seconda della config
         // Nota: se il flusso fa redirect, il codice dopo non verrà eseguito ora
       } catch (e) {
         alert("Sessione scaduta. Effettua nuovamente il login." + e.message);
