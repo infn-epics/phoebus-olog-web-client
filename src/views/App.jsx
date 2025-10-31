@@ -39,7 +39,7 @@ const authConfig = {
   tokenEndpoint: import.meta.env.VITE_AUTH_ENDPOINT_TOKEN,
   redirectUri: import.meta.env.VITE_AUTH_ENDPOINT_REDIRECT_URI,
   scope: import.meta.env.VITE_AUTH_SCOPE,
-  tokenExpiresIn: 10,
+  tokenExpiresIn: 100,
   autoRefreshToken: true,
   logoutEndpoint:
     import.meta.env.VITE_AUTH_ENDPOINT_LOGOUT +
