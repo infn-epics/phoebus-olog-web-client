@@ -1,21 +1,44 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { Backdrop, CircularProgress } from "@mui/material";
 import { EntryEditor } from "../EntryEditor";
-import { ologApi, useVerifyLogExists } from "api/ologApi";
 import { useAuthData } from "src/auth/authContext";
+import { ologApi } from "api/ologApi";
+import { useWebSockets } from "src/hooks/useWebSockets";
+import { useCustomSnackbar } from "src/hooks/useCustomSnackbar";
 
-const EditLog = ({ log, isAuthenticated }) => {
+const EditLog = ({ log }) => {
+  const { updatedLogEntryId, setUpdatedLogEntryId } = useWebSockets();
+  const { enqueueSnackbar } = useCustomSnackbar();
   const [editInProgress, setEditInProgress] = useState(false);
   const [editLog] = ologApi.endpoints.editLog.useMutation();
-  const verifyLogExists = useVerifyLogExists();
   const { token, isTokenExpired, logIn } = useAuthData();
   const navigate = useNavigate();
 
-  const existingLogGroup = log?.properties
-    ?.filter((it) => it.name === "Log Entry Group")
-    ?.at(0)?.value;
+
+  useEffect(() => {
+    if (
+      updatedLogEntryId &&
+      Number(updatedLogEntryId) === log?.id &&
+      !editInProgress
+    ) {
+      enqueueSnackbar(
+        "This log entry has been updated. Please refresh the page.",
+        {
+          severity: "warning",
+          autoHideDuration: null,
+          id: log?.id
+        }
+      );
+    }
+  }, [editInProgress, enqueueSnackbar, log?.id, updatedLogEntryId]);
+
+  useEffect(() => {
+    return () => {
+      setUpdatedLogEntryId(null);
+    };
+  }, [setUpdatedLogEntryId]);
 
   const form = useForm({
     defaultValues: {
@@ -23,13 +46,12 @@ const EditLog = ({ log, isAuthenticated }) => {
     },
     values: {
       ...log,
-      description: log.source,
       level: { name: log.level, defaultLevel: false }
     }
   });
 
   const onSubmit = async (formData) => {
-    if (!formData || !isAuthenticated) {
+    if (!formData) {
       setEditInProgress(false);
       return;
     }
@@ -48,6 +70,7 @@ const EditLog = ({ log, isAuthenticated }) => {
       }
     }
 
+
     setEditInProgress(true);
 
     const body = {
@@ -61,44 +84,23 @@ const EditLog = ({ log, isAuthenticated }) => {
       attachments: formData.attachments ?? []
     };
 
-    // Verify the group id hasn't been somehow edited
-    // This shouldn't happen, but we should try to protect against it
-    // since the backend currently does not protect against mangling the group id property
-    const currentGroupId = body?.properties
-      ?.filter((it) => it.name === "Log Entry Group")
-      ?.at(0)?.value;
-    if (currentGroupId !== existingLogGroup) {
-      console.error("Log group has been edited!", body);
-      return;
-    }
 
-    try {
-      // Edit the log
-      const data = await editLog({ log: body, token: token }).unwrap();
-      try {
-        // Verify full edited/available
-        await verifyLogExists({ logRequest: formData, logResult: data });
-        setEditInProgress(false);
-      } catch (error) {
-        console.error("An error occured while checking log was edited", error);
-      } finally {
-        navigate(`/logs/${data.id}`);
+    editLog({ log: body, token: token })
+          .unwrap()
+          .then((data) => {
+            setEditInProgress(false);
+            navigate(`/logs/${data.id}`);
+          })
+          .catch((error) => {
+            setUpdatedLogEntryId(null);
+            setEditInProgress(false);
+            enqueueSnackbar("Failed to edit log entry. Please try again later.", {
+              variant: "error"
+            });
+            console.error("Failed to edit log entry.", error);
+            return error;
+          });
       }
-    } catch (error) {
-      if (
-        error.response &&
-        (error.response.status === 401 || error.response.status === 403)
-      ) {
-        alert("You are currently not authorized to edit a log entry.");
-      } else if (error.response && error.response.status === 413) {
-        // 413 = payload too large
-        alert(error.response.data); // Message set in data by server
-      } else if (error.response && error.response.status >= 500) {
-        alert("Failed to edit log entry.");
-      }
-      setEditInProgress(false);
-    }
-  };
 
   return (
     <>
@@ -113,8 +115,9 @@ const EditLog = ({ log, isAuthenticated }) => {
           form,
           title: `Edit Log "${log?.title}"`,
           onSubmit,
-          submitDisabled: !isAuthenticated,
-          attachmentsDisabled: false
+          submitDisabled: !form.formState.isDirty,
+          attachmentsDisabled: false,
+          isEditing: true,
         }}
       />
     </>

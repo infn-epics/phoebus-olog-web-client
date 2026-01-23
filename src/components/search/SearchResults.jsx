@@ -11,7 +11,6 @@ import { useMemo } from "react";
 import { SearchResultList } from "./SearchResultList";
 import { SearchParamsBadges } from "./SearchParamsBadges";
 import { ologApi } from "api/ologApi";
-import customization from "config/customization";
 import { useSearchPageParams } from "features/searchPageParamsReducer";
 import { useEnhancedSearchParams } from "src/hooks/useEnhancedSearchParams";
 
@@ -20,13 +19,16 @@ export const SearchResults = styled(({ className }) => {
   const searchPageParams = useSearchPageParams();
 
   const searchLogsQuery = useMemo(() => {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
     let params = {
       ...searchPageParams,
-      ...searchParams
+      ...searchParams,
+      tz
     };
 
     return params;
   }, [searchPageParams, searchParams]);
+
   const {
     data: searchResults = {
       logs: [],
@@ -36,7 +38,6 @@ export const SearchResults = styled(({ className }) => {
     isLoading: loading,
     isFetching: isFetchingSearchResults
   } = ologApi.endpoints.searchLogs.useQuery(searchLogsQuery, {
-    pollingInterval: customization.defaultSearchFrequency,
     refetchOnMountOrArgChange: true,
     refetchOnFocus: true
   });

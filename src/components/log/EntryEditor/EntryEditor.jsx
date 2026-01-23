@@ -33,12 +33,12 @@ const getOptionLabel = (option) => option.name;
 const isOptionEqualToValue = (option, value) => option.name === value.name;
 
 export const EntryEditor = ({
-  form,
-  title,
-  onSubmit,
-  submitDisabled,
-  attachmentsDisabled
-}) => {
+                              form,
+                              title,
+                              onSubmit,
+                              submitDisabled,
+                              attachmentsDisabled
+                            }) => {
   const topElem = useRef();
   const [selectedSource, setSelectedSource] = useState("");
   const { control, handleSubmit, formState, setValue } = form;

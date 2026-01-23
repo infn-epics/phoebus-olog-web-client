@@ -17,7 +17,6 @@
  */
 
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { useCallback } from "react";
 import customization from "config/customization";
 import { useAuthData } from "src/auth/authContext";
 import OlogAttachment from "components/log/EntryEditor/Description/OlogAttachment";
@@ -29,49 +28,7 @@ export function ologClientInfoHeader() {
   };
 }
 
-/**
- * A wrapper around setTimeout that allows awaiting a delay.
- * @param {number} duration duration in milliseconds to delay.
- * @returns a resolvable Promise.
- */
-const delay = (duration) => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve();
-    }, duration);
-  });
-};
-
-const withRetry = async ({
-  fcn,
-  retries = 5,
-  retryCondition = () => true,
-  retryDelay = () => 30
-}) => {
-  let retryCount = 0;
-  let shouldRetry = true;
-  let res = null;
-  while (shouldRetry) {
-    if (retryCount >= retries) {
-      throw new Error(`Retry condition not fulfilled after ${retries} retries`);
-    }
-    try {
-      res = await fcn();
-    } catch (e) {
-      res = e;
-    }
-    if (retryCondition(res)) {
-      shouldRetry = true;
-    } else {
-      shouldRetry = false;
-    }
-    retryCount++;
-    await delay(retryDelay(retryCount));
-  }
-  return res;
-};
-
-export const ologApi = createApi({
+const ologApi = createApi({
   reducerPath: "ologApi",
   baseQuery: fetchBaseQuery({
     baseUrl: customization.APP_BASE_URL, // e.g. http://localhost:8080/Olog
@@ -263,34 +220,24 @@ export const ologApi = createApi({
   })
 });
 
-export const useVerifyLogExists = () => {
-  // use the SEARCH endpoint because the problem isn't that the log isn't
-  // available as a resource by id -- the problem is search can take too long
-  // to index it, leading to incomplete entries appearing in search (/logs/search) but
-  // looking fine when retrieved by id (/logs/{id}).
-  const [searchLogs] = ologApi.endpoints.searchLogs.useLazyQuery();
-
-  return useCallback(
-    async ({ logRequest, logResult }) => {
-      return withRetry({
-        fcn: async () =>
-          searchLogs({ title: `"${logResult.title}"`, end: "now" }).unwrap(),
-        retries: 5,
-        retryCondition: (retryRes) => {
-          // Retry if the entry we created isn't in the search results yet
-          // Or if it does show in search but the attachments haven't been associated to it yet
-          // (the server sometimes responds with the entry but has an empty attachments field)
-          const found = retryRes?.logs?.find(
-            (it) => `${it.id}` === `${logResult.id}`
-          );
-          const hasAllAttachments =
-            found?.attachments?.length === logRequest?.attachments?.length;
-          const willRetry = !(found && hasAllAttachments);
-          return willRetry;
-        },
-        retryDelay: (count) => count * 200
-      });
-    },
-    [searchLogs]
-  );
+export const TagTypes = {
+  GetLogs: "GetLogs"
 };
+
+const enhancedApiWithTags = ologApi.enhanceEndpoints({
+  addTagTypes: Object.values(TagTypes),
+  endpoints: {
+    searchLogs: {
+      providesTags: [TagTypes.GetLogs]
+    },
+    getLogGroup: {
+      providesTags: [TagTypes.GetLogs]
+    },
+    getLog: {
+      providesTags: (result, error, { noInvalidate }) =>
+        noInvalidate ? [] : [TagTypes.GetLogs]
+    }
+  }
+});
+
+export { enhancedApiWithTags as ologApi };

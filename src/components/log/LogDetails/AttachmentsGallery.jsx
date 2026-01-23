@@ -6,13 +6,14 @@ import {
   Link,
   Stack,
   styled,
+  Tooltip,
   Typography
 } from "@mui/material";
 import { useState } from "react";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import DownloadIcon from "@mui/icons-material/Download";
 import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
-import { FileImage } from "components/Attachment";
+import { ImageOrFile } from "components/Attachment";
 import Modal from "components/shared/Modal";
 
 const Image = styled(({ attachment, className }) => {
@@ -44,10 +45,10 @@ const FileLink = ({ attachment }) => (
     href={attachment.url}
     download
   >
-    <FileImage
+    <ImageOrFile
       attachment={attachment}
       alt={`file: ${attachment.filename}`}
-      fontSize={90}
+      fontSize={85}
     />
   </Link>
 );
@@ -171,16 +172,21 @@ const AttachmentsGallery = ({ attachments, size = 85 }) => {
           />
           <ImageListItemBar
             position="below"
-            title={renderAttachmentTitle(attachment)}
-            fontSize="small"
             sx={{
-              "& div": {
-                fontSize: "0.775rem",
-                fontStyle: "italic",
-                padding: 0,
-                margin: "4px 0 10px"
+              "& .MuiImageListItemBar-titleWrap": {
+                padding: "4px 0 0"
               }
             }}
+            title={
+              <Tooltip title={attachment.filename}>
+                <Typography
+                  fontSize=".775rem"
+                  component="span"
+                >
+                  {renderAttachmentTitle(attachment)}
+                </Typography>
+              </Tooltip>
+            }
           />
         </Stack>
       ))}
@@ -199,17 +205,25 @@ const AttachmentsGallery = ({ attachments, size = 85 }) => {
             key={attachment.id}
             attachment={attachment}
           />
-          <Stack flexDirection="row">
-            <Typography
-              sx={{
-                fontSize: "0.775rem",
-                fontStyle: "italic",
-                margin: "5px 0 10px"
-              }}
-            >
-              {renderAttachmentTitle(attachment)}
-            </Typography>
-          </Stack>
+
+          <ImageListItemBar
+            position="below"
+            sx={{
+              "& .MuiImageListItemBar-titleWrap": {
+                padding: "4px 0 0"
+              }
+            }}
+            title={
+              <Tooltip title={attachment.filename}>
+                <Typography
+                  fontSize=".775rem"
+                  component="span"
+                >
+                  {renderAttachmentTitle(attachment)}
+                </Typography>
+              </Tooltip>
+            }
+          />
         </Stack>
       ))}
       <Modal

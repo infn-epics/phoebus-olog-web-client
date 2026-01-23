@@ -1,13 +1,5 @@
-import {
-  Alert,
-  Box,
-  Button,
-  FormLabel,
-  Stack,
-  Typography,
-  styled
-} from "@mui/material";
-import { useEffect, useRef, useState } from "react";
+import { Alert, Box, Button, Stack, Typography, styled } from "@mui/material";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useFieldArray } from "react-hook-form";
 import { v4 as uuidv4 } from "uuid";
 import { FaMarkdown } from "react-icons/fa";
@@ -22,24 +14,31 @@ import Attachment from "components/Attachment/Attachment";
 import customization from "config/customization";
 import { DroppableFileUploadInput } from "components/shared/input/FileInput";
 import { parseUrlToMarkdown } from "src/hooks/parseUrlToMarkdown";
+import { useUnsupported } from "src/hooks/useUnsupported";
+import { UnsupportedAlert } from "src/components/shared/UnsupportedAlert";
 
 const RenderedAttachmentsContainer = styled("div")(
   ({ hasAttachments, theme }) => ({
-    display: hasAttachments ? "grid" : "flex",
-    placeItems: "center",
-    gridTemplateColumns: "repeat(auto-fill, 10rem)",
-    gridAutoRows: "10rem",
-    gridTemplateRows: "repeat(auto-fill, 10rem)",
+    display: "flex",
+    flexWrap: "wrap",
     flexDirection: "row",
     alignItems: "center",
-    gap: "0.5rem",
+    columnGap: ".7rem",
+    rowGap: "1rem",
     padding: "0.5rem",
     border: `solid 1px ${theme.palette.gray}`,
-    borderRadius: "5px"
+    borderRadius: "5px",
+    "& > div": {
+      width: hasAttachments ? "160px" : "100%"
+    },
+    "& > div:nth-child(1)": {
+      width: hasAttachments ? "fit-content" : "100%"
+    }
   })
 );
 
-const Description = ({ form, attachmentsDisabled, selectedSource }) => {
+
+const Description = ({ form, isEditing, selectedSource }) => {
   const { control, formState, getValues, setValue } = form;
   const descriptionRef = useRef();
 
@@ -52,6 +51,10 @@ const Description = ({ form, attachmentsDisabled, selectedSource }) => {
   const [initialImage, setInitialImage] = useState(null);
   const [showEmbedImageDialog, setShowEmbedImageDialog] = useState(false);
   const [showHtmlPreview, setShowHtmlPreview] = useState(false);
+
+  const unsupportedState = useUnsupported();
+  const { unsupportedFiles, setUnsupportedFiles, checkIsUnsupported } =
+    unsupportedState;
 
   const {
     fields: attachments,
@@ -89,10 +92,19 @@ const Description = ({ form, attachmentsDisabled, selectedSource }) => {
     }
   });
 
+  const parsedAttachments = useMemo(
+    () =>
+      attachments?.map((it) => new OlogAttachment({ attachment: it })) ?? [],
+    [attachments]
+  );
+
   const { data: serverInfo } = ologApi.endpoints.getServerInfo.useQuery();
 
   const generateUniqueFileName = (file) => {
-    return new File([file], `${new Date().getTime()}-${file.name}`, {
+    const splitFileName = file.name.split(".");
+    const name = splitFileName[0] ?? "unknown";
+    const extension = splitFileName[1] ?? ".jpg";
+    return new File([file], `${name}-${new Date().getTime()}.${extension}`, {
       type: file.type,
       lastModified: file.lastModified
     });
@@ -106,6 +118,10 @@ const Description = ({ form, attachmentsDisabled, selectedSource }) => {
     if (files) {
       // note event.target.files is a FileList, not an array! But we can convert it
       Array.from(files).forEach((file) => {
+        if (checkIsUnsupported(file)) {
+          return;
+        }
+        setUnsupportedFiles([]);
         appendAttachment(
           new OlogAttachment({
             file: generateUniqueFileName(file),
@@ -136,16 +152,18 @@ const Description = ({ form, attachmentsDisabled, selectedSource }) => {
     for (let item of items) {
       if (item.kind === "file" && item.type.match(/^image/)) {
         const imageFile = item.getAsFile();
-        if (!attachmentsDisabled && imageFile) {
+        if (checkIsUnsupported(imageFile)) {
+          return;
+        }
+        setUnsupportedFiles([]);
+
+        if (!isEditing && imageFile) {
           setInitialImage(imageFile);
           setShowEmbedImageDialog(true);
         }
       }
-      // Makes sure that the text/html that comes from copied image is not pasted
-      const isImagePaste = items.some(
-        (i) => i.kind === "file" && i.type.startsWith("image/")
-      );
-      if (item.kind === "string" && item.type.match(/^text/) && !isImagePaste) {
+
+      if (item.kind === "string" && item.type.match(/^text\/plain$/)) {
         item.getAsString((text) => {
           const { parsedContent, cursorPosition } = parseUrlToMarkdown(
             text,
@@ -191,31 +209,12 @@ const Description = ({ form, attachmentsDisabled, selectedSource }) => {
     });
   };
 
-  const handleClipboardAttach = async () => {
-    try {
-      const items = await navigator.clipboard.read();
-      for (const item of items) {
-        for (const type of item.types) {
-          if (type.startsWith("image/")) {
-            const blob = await item.getType(type);
-            const extension = type.split("/")[1];
-            const file = new File([blob], `clipboard-image.${extension}`, {
-              type: `image/${extension}`
-            });
-            onFileChanged([file]);
-          }
-        }
-      }
-    } catch (error) {
-      console.error("Failed to read clipboard:", error);
-    }
-  };
   // Set the max attachment filesize
   useEffect(() => {
     if (selectedSource) {
       setValue("description", selectedSource);
     }
-    if (serverInfo) {
+    if (serverInfo?.serverConfig) {
       setMaxRequestSizeMb(
         serverInfo.serverConfig?.maxRequestSize ??
           customization.defaultMaxRequestSizeMb
@@ -227,20 +226,6 @@ const Description = ({ form, attachmentsDisabled, selectedSource }) => {
     }
   }, [serverInfo, selectedSource]);
 
-  /**
-   * If attachments are present, creates a wrapper containing an array of Attachment components
-   */
-  const renderedAttachments = attachments?.map((attachment, index) => {
-    return (
-      <Attachment
-        key={index}
-        attachment={attachment}
-        removeAttachment={() => onAttachmentRemoved(attachment, index)}
-        disabled={attachmentsDisabled}
-      />
-    );
-  });
-
   return (
     <Stack gap={1}>
       <TextInput
@@ -249,7 +234,8 @@ const Description = ({ form, attachmentsDisabled, selectedSource }) => {
         control={control}
         defaultValue=""
         multiline
-        minRows={10}
+        minRows={7}
+        maxRows={12}
         sx={{ "& .MuiInputBase-root": { padding: 0 } }}
         onPaste={handlePaste}
         inputRef={descriptionRef}
@@ -258,7 +244,7 @@ const Description = ({ form, attachmentsDisabled, selectedSource }) => {
         direction="row"
         justifyContent="space-between"
       >
-        <Box>
+        <Box mt={1}>
           <ExternalLink
             href={`${customization.APP_BASE_URL}/help/CommonmarkCheatsheet`}
             label="CommonMark Formatting Help"
@@ -267,9 +253,13 @@ const Description = ({ form, attachmentsDisabled, selectedSource }) => {
               flexDirection="row"
               gap={0.5}
               alignItems="center"
+              justifyContent={"center"}
             >
               <FaMarkdown />
-              <Typography component="span">
+              <Typography
+                fontSize="0.875rem"
+                component="span"
+              >
                 CommonMark Formatting Help
               </Typography>
             </Stack>
@@ -278,10 +268,11 @@ const Description = ({ form, attachmentsDisabled, selectedSource }) => {
         <Stack
           direction="row"
           gap={1}
+          mt={0.5}
         >
           <Button
             variant="outlined"
-            disabled={attachmentsDisabled}
+            disabled={isEditing}
             onClick={() => setShowEmbedImageDialog(true)}
           >
             Embed Image
@@ -294,54 +285,40 @@ const Description = ({ form, attachmentsDisabled, selectedSource }) => {
           </Button>
         </Stack>
       </Stack>
-      <Stack>
-        <Stack
-          direction="column"
-          mt={3}
-          mb={1}
+      <Stack mt={2}>
+        <RenderedAttachmentsContainer
+          hasAttachments={attachments && attachments.length > 0}
         >
-          <Box>
-            <FormLabel
-              htmlFor="attachments-upload"
-              sx={{ color: "text.primary" }}
-            >
-              {!attachmentsDisabled ? "Attachments" : "Attachments (Disabled)"}{" "}
-              <br />
-              (max size per file: {maxFileSizeMb}MB, max total size:{" "}
-              {maxRequestSizeMb}MB)
-            </FormLabel>
-          </Box>
-          <Button
-            sx={{ mt: 1, width: "fit-content" }}
-            variant="outlined"
-            disabled={attachmentsDisabled}
-            onClick={handleClipboardAttach}
-          >
-            Attach image from clipboard
-          </Button>
-        </Stack>
-        <Stack>
-          <RenderedAttachmentsContainer
-            hasAttachments={attachments && attachments.length > 0}
-          >
-            <DroppableFileUploadInput
-              onFileChanged={onFileChanged}
-              id="attachments-upload"
-              dragLabel="Drag Here"
-              browseLabel="Choose File(s) or"
-              multiple
-              maxFileSizeMb={maxFileSizeMb}
-              disabled={attachmentsDisabled}
-            />
-            {renderedAttachments}
-          </RenderedAttachmentsContainer>
-          {formState?.errors?.attachments ? (
-            <Alert severity="error">
-              {formState?.errors?.attachments?.root.message}
-            </Alert>
-          ) : null}
-        </Stack>
+          <DroppableFileUploadInput
+            id="attachments-upload"
+            dragLabel="Drag Here"
+            browseLabel="Choose File(s)"
+            multiple
+            onFileChanged={onFileChanged}
+            maxFileSizeMb={maxFileSizeMb}
+            maxRequestSizeMb={maxRequestSizeMb}
+            disabled={isEditing}
+          />
+          {parsedAttachments?.map((attachment, index) => {
+            return (
+              <Attachment
+                key={index}
+                attachment={attachment}
+                removeAttachment={() => onAttachmentRemoved(attachment, index)}
+                disabled={isEditing}
+              />
+            );
+          })}
+        </RenderedAttachmentsContainer>
+        {formState?.errors?.attachments ? (
+          <Alert severity="error">
+            {formState?.errors?.attachments?.root.message}
+          </Alert>
+        ) : null}
       </Stack>
+      {unsupportedFiles.length > 0 && (
+        <UnsupportedAlert state={unsupportedState} />
+      )}
       <EmbedImageDialog
         showEmbedImageDialog={showEmbedImageDialog}
         setShowEmbedImageDialog={setShowEmbedImageDialog}
@@ -354,8 +331,8 @@ const Description = ({ form, attachmentsDisabled, selectedSource }) => {
         <HtmlPreviewModal
           showHtmlPreview={showHtmlPreview}
           setShowHtmlPreview={setShowHtmlPreview}
-          commonmarkSrc={getValues("description")}
-          useRemoteAttachments={attachmentsDisabled}
+          commonmarkSrc={getValues("description") ?? ""}
+          useRemoteAttachments={isEditing}
           attachedFiles={attachments ?? []}
         />
       )}

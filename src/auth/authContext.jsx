@@ -10,6 +10,8 @@ export const AuthDataProvider = ({ children }) => {
   const [authState, setAuthState] = useState({ token: null, tokenData: null });
   const dispatch = useDispatch();
 
+
+
   useEffect(() => {
     setAuthState({ token, tokenData });
     if (tokenData) {
@@ -46,12 +48,43 @@ export const AuthDataProvider = ({ children }) => {
 
   const isAuthenticated = !!authState.token && !isTokenExpired();
 
+
+
+  const hardLogout = () => {
+    const idToken =
+      tokenData?.id_token ||
+      localStorage.getItem("react-oauth2-code-pkce-id-token");
+
+    if (!idToken) {
+      console.warn("[Auth] ID token non trovato, uso logout standard");
+      logOut();
+      return;
+    }
+
+    const logoutUrl =
+      `${import.meta.env.VITE_AUTH_ENDPOINT_LOGOUT}` +
+      `?id_token_hint=${encodeURIComponent(idToken)}` +
+      `&post_logout_redirect_uri=${encodeURIComponent(
+        import.meta.env.VITE_AUTH_ENDPOINT_REDIRECT_URI
+      )}` +
+      `&client_id=${import.meta.env.VITE_AUTH_CLIENT_ID}`;
+
+    // Pulizia locale (difensiva)
+    localStorage.clear();
+    sessionStorage.clear();
+
+    window.location.href = logoutUrl;
+  };
+
+
+
+
   return (
     <AuthDataContext.Provider
       value={{
         ...authState,
         logIn,
-        logOut,
+        hardLogout,
         isTokenExpired,
         isAuthenticated,
         timeToExpireMs

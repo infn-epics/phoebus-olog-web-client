@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useShowLogin, useUser } from "features/authSlice";
 import { useAuthData } from "src/auth/authContext";
 
-const useIsAuthenticated = () => {
+export const useIsAuthenticated = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const { setShowLogin, setUser } = useShowLogin();
   const user = useUser();
@@ -31,7 +31,5 @@ const useIsAuthenticated = () => {
     }
   }, [setShowLogin, user]);
 
-  return [isAuthenticated];
+  return { isAuthenticated };
 };
-
-export default useIsAuthenticated;

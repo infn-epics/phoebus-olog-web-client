@@ -17,21 +17,28 @@
  */
 
 import { useState } from "react";
-import { Outlet, useLocation } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 import { Box, styled } from "@mui/material";
 import { AuthProvider } from "react-oauth2-code-pkce";
-import Initialize from "../components/Initialize";
+import { useOnPage } from "../hooks/onPage";
 import { AuthDataProvider, useAuthData } from "src/auth/authContext";
 import { AppNavBar } from "src/components/AppNavBar";
 import { AdvancedSearchDrawer } from "components/search/AdvancedSearchDrawer.jsx";
-import { onHomePage } from "hooks/isHomePage.js";
 import { theme } from "src/config/theme";
+import { ologApi } from "src/api/ologApi";
 
 if (import.meta.env.VITE_APP_OAUTH2_ENABLED) {
   console.info("[Auth] OAuth2 login mode ENABLED");
 } else {
   console.info("[Auth] Classic username/password login mode ENABLED");
 }
+
+// logoutEndpoint:
+//   `${import.meta.env.VITE_AUTH_ENDPOINT_LOGOUT}` +
+//   `?post_logout_redirect_uri=${encodeURIComponent(
+//     import.meta.env.VITE_AUTH_ENDPOINT_REDIRECT_URI
+//   )}` +
+//   `&client_id=${import.meta.env.VITE_AUTH_CLIENT_ID}`
 
 const authConfig = {
   clientId: import.meta.env.VITE_AUTH_CLIENT_ID,
@@ -93,11 +100,13 @@ function LoginInfo() {
  * Entry point component.
  */
 const App = styled(({ className }) => {
-  const { pathname } = useLocation();
   const [advancedSearchOpen, setAdvancedSearchOpen] = useState(false);
+  const { onHomePage } = useOnPage();
+
+  ologApi.endpoints.getUser.useQuery({});
 
   return (
-    <Initialize>
+    <>
       <AuthProvider authConfig={authConfig}>
         <AuthDataProvider>
           <LoginInfo />
@@ -107,14 +116,14 @@ const App = styled(({ className }) => {
           <Box
             sx={{
               display: "grid",
-              gridTemplateColumns: onHomePage(pathname) ? "auto 2fr" : null,
+              gridTemplateColumns: onHomePage ? "auto 2fr" : null,
               gridTemplateRows: "1fr",
               height: "100vh",
               overflow: "auto",
               transition: ""
             }}
           >
-            {onHomePage(pathname) && (
+            {onHomePage && (
               <AdvancedSearchDrawer advancedSearchOpen={advancedSearchOpen} />
             )}
             <Box
@@ -139,7 +148,7 @@ const App = styled(({ className }) => {
           </Box>
         </AuthDataProvider>
       </AuthProvider>
-    </Initialize>
+    </>
   );
 
   // return (

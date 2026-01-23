@@ -20,16 +20,25 @@ import { Alert, Button, Stack, Typography } from "@mui/material";
 import Modal from "components/shared/Modal";
 import { ologApi } from "api/ologApi";
 import { useShowLogout } from "features/authSlice";
+import { useAuthData } from "src/auth/authContext";
+
 
 const LogoutDialog = () => {
   const [logoutErrorMessage, setLogoutErrorMessage] = useState("");
-  const [logout, { isSuccess, error }] = ologApi.endpoints.logout.useMutation();
+  const [ { isSuccess, error }] = ologApi.endpoints.logout.useMutation();
   const { showLogout, setShowLogout } = useShowLogout();
+  const { hardLogout } = useAuthData();
+
+  const { logOut } = useAuthData();
+
+
 
   const hideLogout = () => {
     setLogoutErrorMessage("");
     setShowLogout(false);
   };
+
+
 
   // On logout success, close dialog
   useEffect(() => {
@@ -74,7 +83,14 @@ const LogoutDialog = () => {
           </Button>
           <Button
             variant="contained"
-            onClick={logout}
+            onClick={() => {
+              try {
+                hardLogout(); // ✅ logout originale della libreria
+                setShowLogout(false);
+              } catch (e) {
+                setLogoutErrorMessage("Logout failed. Please try again.");
+              }
+            }}
           >
             Logout
           </Button>
