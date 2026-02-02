@@ -41,16 +41,16 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - nameif [ "${{ inputs.tag_as_latest }}" = "true" ]; then
-              echo "suffix=" >> $GITHUB_OUTPUT
-            else
-              echo "suffix=-${{ inputs.docker_target }}" >> $GITHUB_OUTPUT
-            fi
+      - name: Set Docker target
         id: set-target
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "target=${{ inputs.docker_target }}" >> $GITHUB_OUTPUT
-            echo "suffix=-${{ inputs.docker_target }}" >> $GITHUB_OUTPUT
+            if [ "${{ inputs.tag_as_latest }}" = "true" ]; then
+              echo "suffix=" >> $GITHUB_OUTPUT
+            else
+              echo "suffix=-${{ inputs.docker_target }}" >> $GITHUB_OUTPUT
+            fi
           else
             echo "target=nginx-server" >> $GITHUB_OUTPUT
             echo "suffix=" >> $GITHUB_OUTPUT
