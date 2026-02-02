@@ -1,6 +1,17 @@
 name: Create and publish Docker image
 
-on: push
+on:
+  push:
+  workflow_dispatch:
+    inputs:
+      docker_target:
+        description: 'Docker build target (nginx-server or node-server)'
+        required: false
+        default: 'nginx-server'
+        type: choice
+        options:
+          - nginx-server
+          - node-server
 
 env:
   REGISTRY: ghcr.io
@@ -25,11 +36,24 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Set Docker target
+        id: set-target
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "target=${{ inputs.docker_target }}" >> $GITHUB_OUTPUT
+            echo "suffix=-${{ inputs.docker_target }}" >> $GITHUB_OUTPUT
+          else
+            echo "target=nginx-server" >> $GITHUB_OUTPUT
+            echo "suffix=" >> $GITHUB_OUTPUT
+          fi
+
       - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@v5.8.0
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          flavor: |
+            suffix=${{ steps.set-target.outputs.suffix }},onlatest=true
 
       - name: Build and push Docker image
         id: push
@@ -37,6 +61,7 @@ jobs:
         with:
           context: .
           push: true
+          target: ${{ steps.set-target.outputs.target }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
