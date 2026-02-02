@@ -36,7 +36,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set Docker target and tags
+      - name: Set Docker target and image name
         id: set-target
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
@@ -47,23 +47,23 @@ jobs:
           
           echo "target=$TARGET" >> $GITHUB_OUTPUT
           
-          # nginx-server gets 'latest' tag, node-server gets 'node-server' tag
+          # nginx-server uses default image name, node-server gets suffix
           if [ "$TARGET" = "node-server" ]; then
-            echo "latest-tag=node-server" >> $GITHUB_OUTPUT
+            echo "image-name=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-node-server" >> $GITHUB_OUTPUT
           else
-            echo "latest-tag=latest" >> $GITHUB_OUTPUT
+            echo "image-name=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}" >> $GITHUB_OUTPUT
           fi
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@v5.8.0
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: ${{ steps.set-target.outputs.image-name }}
           tags: |
             type=ref,event=branch
             type=ref,event=pr
             type=sha
-            type=raw,value=${{ steps.set-target.outputs.latest-tag }}
+            type=raw,value=latest
 
       - name: Build and push Docker image
         id: push
