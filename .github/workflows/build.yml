@@ -36,12 +36,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set Docker target
-        id: set-target
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "target=${{ inputs.docker_target }}" >> $GITHUB_OUTPUT
-            if [ "${{ inputs.ta and tags
+      - name: Set Docker target and tags
         id: set-target
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
@@ -69,6 +64,11 @@ jobs:
             type=ref,event=pr
             type=sha
             type=raw,value=${{ steps.set-target.outputs.latest-tag }}
+
+      - name: Build and push Docker image
+        id: push
+        uses: docker/build-push-action@v6.18.0
+        with:
           context: .
           push: true
           target: ${{ steps.set-target.outputs.target }}
