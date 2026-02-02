@@ -225,7 +225,7 @@ const AppNavBar = ({ advancedSearchOpen, setAdvancedSearchOpen }) => {
               fontSize="1.3rem"
               component="span"
             >
-              ESS Logbook
+              {import.meta.env.VITE_APP_LOGBOOK_NAME || "Olog"}
             </Typography>
           </Button>
           <nav aria-label="user menu">
