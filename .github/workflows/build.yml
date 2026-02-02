@@ -12,11 +12,6 @@ on:
         options:
           - nginx-server
           - node-server
-      tag_as_latest:
-        description: 'Tag this build as "latest" (no suffix)'
-        required: false
-        default: true
-        type: boolean
 
 env:
   REGISTRY: ghcr.io
@@ -46,14 +41,22 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "target=${{ inputs.docker_target }}" >> $GITHUB_OUTPUT
-            if [ "${{ inputs.tag_as_latest }}" = "true" ]; then
-              echo "suffix=" >> $GITHUB_OUTPUT
-            else
-              echo "suffix=-${{ inputs.docker_target }}" >> $GITHUB_OUTPUT
-            fi
+            if [ "${{ inputs.ta and tags
+        id: set-target
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TARGET="${{ inputs.docker_target }}"
           else
-            echo "target=nginx-server" >> $GITHUB_OUTPUT
-            echo "suffix=" >> $GITHUB_OUTPUT
+            TARGET="nginx-server"
+          fi
+          
+          echo "target=$TARGET" >> $GITHUB_OUTPUT
+          
+          # nginx-server gets 'latest' tag, node-server gets 'node-server' tag
+          if [ "$TARGET" = "node-server" ]; then
+            echo "latest-tag=node-server" >> $GITHUB_OUTPUT
+          else
+            echo "latest-tag=latest" >> $GITHUB_OUTPUT
           fi
 
       - name: Extract metadata (tags, labels) for Docker
@@ -61,13 +64,11 @@ jobs:
         uses: docker/metadata-action@v5.8.0
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          flavor: |
-            suffix=${{ steps.set-target.outputs.suffix }},onlatest=true
-
-      - name: Build and push Docker image
-        id: push
-        uses: docker/build-push-action@v6.18.0
-        with:
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha
+            type=raw,value=${{ steps.set-target.outputs.latest-tag }}
           context: .
           push: true
           target: ${{ steps.set-target.outputs.target }}
