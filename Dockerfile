@@ -23,8 +23,7 @@ FROM node:22.13.1-alpine AS node-server
 
 WORKDIR /usr/share/app
 RUN npm install -g serve
-COPY --from=builder /usr/src/phoebus-olog-web-client/build ./build
-COPY --chmod=755 env.sh ./env.sh
+COPY --from=builder /usr/src/phoebus-olog-web-client .
 
 # Run env.sh and then serve
 EXPOSE 8080
