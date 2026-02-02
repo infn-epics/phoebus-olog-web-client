@@ -12,6 +12,11 @@ on:
         options:
           - nginx-server
           - node-server
+      tag_as_latest:
+        description: 'Tag this build as "latest" (no suffix)'
+        required: false
+        default: true
+        type: boolean
 
 env:
   REGISTRY: ghcr.io
@@ -36,7 +41,11 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set Docker target
+      - nameif [ "${{ inputs.tag_as_latest }}" = "true" ]; then
+              echo "suffix=" >> $GITHUB_OUTPUT
+            else
+              echo "suffix=-${{ inputs.docker_target }}" >> $GITHUB_OUTPUT
+            fi
         id: set-target
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
