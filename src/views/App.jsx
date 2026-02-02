@@ -34,24 +34,24 @@ if (import.meta.env.VITE_APP_OAUTH2_ENABLED) {
 }
 
 // logoutEndpoint:
-//   `${import.meta.env.VITE_AUTH_ENDPOINT_LOGOUT}` +
+//   `${import.meta.env.VITE_APP_AUTH_ENDPOINT_LOGOUT}` +
 //   `?post_logout_redirect_uri=${encodeURIComponent(
-//     import.meta.env.VITE_AUTH_ENDPOINT_REDIRECT_URI
+//     import.meta.env.VITE_APP_AUTH_ENDPOINT_REDIRECT_URI
 //   )}` +
-//   `&client_id=${import.meta.env.VITE_AUTH_CLIENT_ID}`
+//   `&client_id=${import.meta.env.VITE_APP_AUTH_CLIENT_ID}`
 
 const authConfig = {
-  clientId: import.meta.env.VITE_AUTH_CLIENT_ID,
-  authorizationEndpoint: import.meta.env.VITE_AUTH_ENDPOINT,
-  tokenEndpoint: import.meta.env.VITE_AUTH_ENDPOINT_TOKEN,
-  redirectUri: import.meta.env.VITE_AUTH_ENDPOINT_REDIRECT_URI,
-  scope: import.meta.env.VITE_AUTH_SCOPE,
+  clientId: import.meta.env.VITE_APP_AUTH_CLIENT_ID,
+  authorizationEndpoint: import.meta.env.VITE_APP_AUTH_ENDPOINT,
+  tokenEndpoint: import.meta.env.VITE_APP_AUTH_ENDPOINT_TOKEN,
+  redirectUri: import.meta.env.VITE_APP_AUTH_ENDPOINT_REDIRECT_URI,
+  scope: import.meta.env.VITE_APP_AUTH_SCOPE,
   tokenExpiresIn: 100,
   autoRefreshToken: true,
   logoutEndpoint:
-    import.meta.env.VITE_AUTH_ENDPOINT_LOGOUT +
+    import.meta.env.VITE_APP_AUTH_ENDPOINT_LOGOUT +
     "?redirect_uri=" +
-    import.meta.env.VITE_AUTH_ENDPOINT_REDIRECT_URI,
+    import.meta.env.VITE_APP_AUTH_ENDPOINT_REDIRECT_URI,
   onRefreshTokenExpire: (event) => event.logIn(undefined, undefined, "redirect"),
   onLogin: (event) => event.logIn(undefined, undefined, "popup")
 };

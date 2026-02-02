@@ -62,12 +62,12 @@ export const AuthDataProvider = ({ children }) => {
     }
 
     const logoutUrl =
-      `${import.meta.env.VITE_AUTH_ENDPOINT_LOGOUT}` +
+      `${import.meta.env.VITE_APP_AUTH_ENDPOINT_LOGOUT}` +
       `?id_token_hint=${encodeURIComponent(idToken)}` +
       `&post_logout_redirect_uri=${encodeURIComponent(
-        import.meta.env.VITE_AUTH_ENDPOINT_REDIRECT_URI
+        import.meta.env.VITE_APP_AUTH_ENDPOINT_REDIRECT_URI
       )}` +
-      `&client_id=${import.meta.env.VITE_AUTH_CLIENT_ID}`;
+      `&client_id=${import.meta.env.VITE_APP_AUTH_CLIENT_ID}`;
 
     // Pulizia locale (difensiva)
     localStorage.clear();
