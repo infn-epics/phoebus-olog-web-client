@@ -24,9 +24,9 @@ FROM node:22.13.1-alpine AS node-server
 WORKDIR /usr/share/app
 RUN npm install -g serve
 COPY --from=builder /usr/src/phoebus-olog-web-client .
-
+RUN chown --recursive node:node .
+USER node
 # Run env.sh and then serve
-EXPOSE 8080
 CMD ["/bin/sh", "-c", "./env.sh && serve -s build -l 8080"]
 
 # Default to nginx-server
