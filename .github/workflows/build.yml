@@ -20,6 +20,9 @@ env:
 jobs:
   build-and-push-image:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target: [nginx-server, node-server]
     permissions:
       contents: read
       packages: write
@@ -39,11 +42,7 @@ jobs:
       - name: Set Docker target and image name
         id: set-target
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            TARGET="${{ inputs.docker_target }}"
-          else
-            TARGET="nginx-server"
-          fi
+          TARGET="${{ matrix.target }}"
           
           echo "target=$TARGET" >> $GITHUB_OUTPUT
           
