@@ -18,7 +18,7 @@
 
 import { useState } from "react";
 import { Outlet } from "react-router-dom";
-import { Box, styled } from "@mui/material";
+import { Alert, Box, Link, styled } from "@mui/material";
 import { AuthProvider } from "react-oauth2-code-pkce";
 import { useOnPage } from "../hooks/onPage";
 import { AuthDataProvider, useAuthData } from "src/auth/authContext";
@@ -26,6 +26,7 @@ import { AppNavBar } from "src/components/AppNavBar";
 import { AdvancedSearchDrawer } from "components/search/AdvancedSearchDrawer.jsx";
 import { theme } from "src/config/theme";
 import { ologApi } from "src/api/ologApi";
+import { useCertCheck } from "src/hooks/useCertCheck";
 
 if (import.meta.env.VITE_APP_OAUTH2_ENABLED) {
   console.info("[Auth] OAuth2 login mode ENABLED");
@@ -97,6 +98,34 @@ function LoginInfo() {
 }
 
 /**
+ * Displays a persistent warning when the Olog API backend certificate is not
+ * trusted by the browser.  The user must open the API URL in a new tab, accept
+ * the certificate exception, then reload this page.
+ */
+function CertWarning() {
+  const { certUntrusted, apiUrl } = useCertCheck();
+  if (!certUntrusted) return null;
+  return (
+    <Alert
+      severity="warning"
+      sx={{ borderRadius: 0 }}
+    >
+      The Olog backend at{" "}
+      <Link
+        href={apiUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        {apiUrl}
+      </Link>{" "}
+      is unreachable — this is usually caused by an untrusted SSL certificate.
+      Please open that link in a new tab, accept the certificate exception, then
+      reload this page.
+    </Alert>
+  );
+}
+
+/**
  * Entry point component.
  */
 const App = styled(({ className }) => {
@@ -143,6 +172,7 @@ const App = styled(({ className }) => {
                 advancedSearchOpen={advancedSearchOpen}
                 setAdvancedSearchOpen={setAdvancedSearchOpen}
               />
+              <CertWarning />
               <Outlet />
             </Box>
           </Box>
