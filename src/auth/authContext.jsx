@@ -1,12 +1,12 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { AuthContext as OAuthContext } from "react-oauth2-code-pkce";
 import { useDispatch } from "react-redux";
-import { setUser } from "features/authSlice";
+import { clearOAuthSession, setOAuthSession } from "features/authSlice";
 
 const AuthDataContext = createContext(null);
 
 export const AuthDataProvider = ({ children }) => {
-  const { token, tokenData, logIn, logOut } = useContext(OAuthContext);
+  const { token, tokenData, logIn, logOut, loginInProgress, error } = useContext(OAuthContext);
   const [authState, setAuthState] = useState({ token: null, tokenData: null });
   const dispatch = useDispatch();
 
@@ -14,17 +14,21 @@ export const AuthDataProvider = ({ children }) => {
 
   useEffect(() => {
     setAuthState({ token, tokenData });
-    if (tokenData) {
+    if (tokenData && token) {
+      const uuidClaim =
+        import.meta.env.VITE_APP_AUTH_UUID_CLAIM || "preferred_username";
       let user = {
         userName:
           `${tokenData?.given_name ?? ""} ${tokenData?.family_name ?? ""}`.trim(),
-        uuid: tokenData.preferred_username,
+        uuid: tokenData[uuidClaim],
         givenName: tokenData.given_name,
         familyName: tokenData.family_name,
         email: tokenData.email,
-        roles: tokenData.realm_access.roles
+        roles: tokenData.realm_access?.roles ?? []
       };
-      dispatch(setUser(user)); // Aggiorna lo stato dell'utente in Redux
+      dispatch(setOAuthSession({ user, accessToken: token }));
+    } else if (import.meta.env.VITE_APP_OAUTH2_ENABLED === "true") {
+      dispatch(clearOAuthSession());
     }
   }, [dispatch, token, tokenData]);
 
@@ -46,7 +50,8 @@ export const AuthDataProvider = ({ children }) => {
     return tte <= skewSeconds * 1000;
   };
 
-  const isAuthenticated = !!authState.token && !isTokenExpired();
+  const isAuthenticated = !!authState.token && !isTokenExpired(0);
+  const isAuthenticating = !error && (loginInProgress || (!!token && token !== authState.token));
 
 
 
@@ -87,6 +92,8 @@ export const AuthDataProvider = ({ children }) => {
         hardLogout,
         isTokenExpired,
         isAuthenticated,
+        isAuthenticating,
+        authError: error,
         timeToExpireMs
       }}
     >

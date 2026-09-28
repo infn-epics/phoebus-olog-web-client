@@ -47,7 +47,6 @@ const authConfig = {
   tokenEndpoint: import.meta.env.VITE_APP_AUTH_ENDPOINT_TOKEN,
   redirectUri: import.meta.env.VITE_APP_AUTH_ENDPOINT_REDIRECT_URI,
   scope: import.meta.env.VITE_APP_AUTH_SCOPE,
-  tokenExpiresIn: 100,
   autoRefreshToken: true,
   logoutEndpoint:
     import.meta.env.VITE_APP_AUTH_ENDPOINT_LOGOUT +
@@ -132,7 +131,7 @@ const App = styled(({ className }) => {
   const [advancedSearchOpen, setAdvancedSearchOpen] = useState(false);
   const { onHomePage } = useOnPage();
 
-  ologApi.endpoints.getUser.useQuery({});
+  ologApi.endpoints.getUser.useQuery({}, { skip: import.meta.env.VITE_APP_OAUTH2_ENABLED === "true" });
 
   return (
     <>

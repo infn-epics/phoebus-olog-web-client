@@ -15,13 +15,15 @@ import DownloadIcon from "@mui/icons-material/Download";
 import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
 import { ImageOrFile } from "components/Attachment";
 import Modal from "components/shared/Modal";
+import { useAttachmentUrl } from "src/hooks/useAttachmentUrl";
 
 const Image = styled(({ attachment, className }) => {
+  const resolved = useAttachmentUrl(attachment.url);
   return (
     <img
       className={className}
       alt={attachment.filename}
-      src={attachment.url}
+      src={resolved.url}
     />
   );
 })(({ size, fullSize, height, maxWidth }) => {
@@ -40,10 +42,13 @@ const Image = styled(({ attachment, className }) => {
   }
 });
 
-const FileLink = ({ attachment }) => (
+const FileLink = ({ attachment }) => {
+  const resolved = useAttachmentUrl(attachment.url);
+  return (
   <Link
-    href={attachment.url}
-    download
+    href={resolved.url}
+    download={attachment.filename}
+    aria-disabled={!resolved.url}
   >
     <ImageOrFile
       attachment={attachment}
@@ -51,10 +56,12 @@ const FileLink = ({ attachment }) => (
       fontSize={85}
     />
   </Link>
-);
+  );
+};
 
 const GalleryView = ({ attachments, onPrevious, onNext, currentIndex }) => {
   const attachment = attachments[currentIndex];
+  const resolved = useAttachmentUrl(attachment.url);
   return (
     <Stack
       alignItems="center"
@@ -81,8 +88,9 @@ const GalleryView = ({ attachments, onPrevious, onNext, currentIndex }) => {
       >
         <Button
           component="a"
-          href={attachment.url}
-          download
+          href={resolved.url}
+          download={attachment.filename}
+          disabled={!resolved.url}
           variant="outlined"
         >
           <DownloadIcon sx={{ fontSize: "1.1rem", margin: "0 5px 0 0" }} />

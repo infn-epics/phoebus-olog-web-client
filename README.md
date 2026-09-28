@@ -40,6 +40,8 @@ Available:
 - Properties editor.
 - HTML preview of log entry, including embedded images.
 - Editing log entries
+- OAuth-authenticated logbook creation and collaborator management.
+- INFN Identity search for assigning reader and writer permissions.
 
 Backlog:
 
@@ -66,6 +68,10 @@ Note that, by default, `VITE_APP_*` variables are only embedded during build tim
 | VITE_APP_VERSION                                    | Version string for Olog; default is the version defined in `package.json`.                                                                                                                    |
 | VITE_APP_PUBLIC_PATH                                | Path prefix where the frontend SPA is served (used as Vite `base` and React Router `basename`). Default is '/' but can be modified.                                                           |
 | VITE_APP_APP_TITLE                                  | Title to show app header. Default is `ESS Logbook`.                                                                                                                                           |
+| VITE_APP_IDENTITY_API_BASE_URL                      | INFN Identity API base URL. Defaults to `https://api.app.infn.it`.                                                                                                                            |
+| VITE_APP_AUTH_UUID_CLAIM                            | JWT claim containing the INFN UUID. Defaults to `preferred_username`; it must match the backend `OAUTH2_CLAIMS_NAME`.                                                                          |
+
+Authenticated users can open `/logbooks` (or use the **Logbooks** navigation button) to create a logbook. The creator becomes its administrator and can search INFN identities, then assign `READ`, `WRITE`, or both permissions.
 
 ## Development
 

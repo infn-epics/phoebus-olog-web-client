@@ -1,4 +1,7 @@
 import { Box, styled } from "@mui/material";
+import { useEffect, useState } from "react";
+import { useAuthData } from "src/auth/authContext";
+import { isProtectedAttachment, loadAttachmentUrl } from "src/hooks/useAttachmentUrl";
 
 const Container = styled(Box)(({ theme }) => {
   return `
@@ -163,9 +166,32 @@ const Container = styled(Box)(({ theme }) => {
 });
 
 const HtmlContent = ({ html, className, ...props }) => {
+  const { token } = useAuthData() ?? {};
+  const [resolved, setResolved] = useState(null);
+  useEffect(() => {
+    const controller = new AbortController();
+    const objectUrls = [];
+    const document = new DOMParser().parseFromString(html, "text/html");
+    const elements = [...document.querySelectorAll("img[src], a[href]")].filter((element) => isProtectedAttachment(element.getAttribute(element.tagName === "IMG" ? "src" : "href")));
+    Promise.all(elements.map(async (element) => {
+      const attribute = element.tagName === "IMG" ? "src" : "href";
+      try {
+        const url = await loadAttachmentUrl(element.getAttribute(attribute), token, controller.signal);
+        if (controller.signal.aborted) { URL.revokeObjectURL(url); return; }
+        objectUrls.push(url);
+        element.setAttribute(attribute, url);
+      } catch {
+        element.removeAttribute(attribute);
+        element.setAttribute("title", "Attachment unavailable or access denied");
+      }
+    })).then(() => {
+      if (!controller.signal.aborted) {setResolved({ html, token, content: document.body.innerHTML });}
+    });
+    return () => { controller.abort(); objectUrls.forEach((url) => URL.revokeObjectURL(url)); };
+  }, [html, token]);
   return (
     <Container
-      dangerouslySetInnerHTML={{ __html: html }}
+      dangerouslySetInnerHTML={{ __html: resolved?.html === html && resolved?.token === token ? resolved.content : "" }}
       className={className}
       {...props}
     />

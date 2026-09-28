@@ -2,21 +2,23 @@ import { useParams } from "react-router-dom";
 import { Alert, LinearProgress } from "@mui/material";
 import { EditLog } from "components/log/EditLog";
 import { ologApi } from "src/api/ologApi";
+import { useAuthData } from "src/auth/authContext";
 
 const EditLogView = () => {
+  const { isAuthenticated, isAuthenticating } = useAuthData();
   const { id } = useParams();
   const {
-    data: log,
+    currentData: log,
     isLoading,
     error
   } = ologApi.endpoints.getLog.useQuery(
     { id, noInvalidate: true },
     {
-      skip: false
+      skip: !isAuthenticated
     }
   );
 
-  if (isLoading) {
+  if (isLoading || isAuthenticating) {
     return <LinearProgress sx={{ width: "100%" }} />;
   }
 
@@ -26,12 +28,13 @@ const EditLogView = () => {
         severity="error"
         sx={{ m: 2 }}
       >
-        Error loading log entry {id}
+        {error.status === 403 ? "You do not have permission to access this entry or it is outside your permitted period." : `Error loading log entry ${id}`}
       </Alert>
     );
   }
 
-  return <EditLog log={log} />;
+  if (!isAuthenticated) {return <Alert severity="info">Sign in to edit log entries.</Alert>;}
+  return log ? <EditLog log={log} /> : <LinearProgress />;
 };
 
 export default EditLogView;

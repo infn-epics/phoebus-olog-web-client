@@ -1,6 +1,7 @@
 import { Box, Stack, Typography } from "@mui/material";
 import LogDetails from "src/components/log/LogDetails/LogDetails";
 import { FormattedDate } from "src/components/shared/FormattedDate";
+import IdentityName from "src/components/shared/IdentityName";
 
 const HEADER_BG = "#f2f5f7";
 
@@ -36,7 +37,7 @@ const LogHistoryEntryCard = ({ log }) => {
               noWrap
               sx={{ lineHeight: "100%" }}
             >
-              {log.owner}
+              <IdentityName identifier={log.owner} />
             </Typography>
             <Typography
               sx={{

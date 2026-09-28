@@ -13,8 +13,10 @@ import { SearchParamsBadges } from "./SearchParamsBadges";
 import { ologApi } from "api/ologApi";
 import { useSearchPageParams } from "features/searchPageParamsReducer";
 import { useEnhancedSearchParams } from "src/hooks/useEnhancedSearchParams";
+import { useAuthData } from "src/auth/authContext";
 
 export const SearchResults = styled(({ className }) => {
+  const { isAuthenticated } = useAuthData();
   const { searchParams, isSearchActive } = useEnhancedSearchParams();
   const searchPageParams = useSearchPageParams();
 
@@ -30,7 +32,7 @@ export const SearchResults = styled(({ className }) => {
   }, [searchPageParams, searchParams]);
 
   const {
-    data: searchResults = {
+    currentData: searchResults = {
       logs: [],
       hitCount: 0
     },
@@ -38,10 +40,12 @@ export const SearchResults = styled(({ className }) => {
     isLoading: loading,
     isFetching: isFetchingSearchResults
   } = ologApi.endpoints.searchLogs.useQuery(searchLogsQuery, {
+    skip: !isAuthenticated,
     refetchOnMountOrArgChange: true,
     refetchOnFocus: true
   });
 
+  if (!isAuthenticated) {return <Alert severity="info">Sign in to search log entries.</Alert>;}
   return (
     <Stack
       className={`SearchResultList ${className}`}

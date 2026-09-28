@@ -15,7 +15,7 @@ export function useCertCheck() {
 
   useEffect(() => {
     let cancelled = false;
-    const apiUrl = customization.APP_BASE_URL;
+    const apiUrl = customization.BACKEND_URL;
     if (!apiUrl) return;
 
     fetch(apiUrl, { mode: "no-cors" })
@@ -33,5 +33,5 @@ export function useCertCheck() {
     };
   }, []);
 
-  return { certUntrusted, apiUrl: customization.APP_BASE_URL };
+  return { certUntrusted, apiUrl: customization.BACKEND_URL };
 }

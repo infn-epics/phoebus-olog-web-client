@@ -18,7 +18,6 @@
 
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import customization from "config/customization";
-import { useAuthData } from "src/auth/authContext";
 import OlogAttachment from "components/log/EntryEditor/Description/OlogAttachment";
 
 export function ologClientInfoHeader() {
@@ -33,7 +32,14 @@ const ologApi = createApi({
   baseQuery: fetchBaseQuery({
     baseUrl: customization.BACKEND_URL, // e.g. http://localhost:8080/Olog
     credentials: "include", // send credentials with requests
-    headers: { ...ologClientInfoHeader() }
+    headers: { ...ologClientInfoHeader() },
+    prepareHeaders: (headers, { getState }) => {
+      const token = getState().auth.accessToken;
+      if (token) {
+        headers.set("Authorization", `Bearer ${token}`);
+      }
+      return headers;
+    }
   }),
   keepUnusedDataFor: 0, // Don't cache anything
   endpoints: (builder) => ({
@@ -85,6 +91,47 @@ const ologApi = createApi({
     getLogbooks: builder.query({
       query: () => ({
         url: "/logbooks"
+      })
+    }),
+    getMyLogbookPermissions: builder.query({
+      query: () => ({ url: "/logbooks/permissions/me" })
+    }),
+    createLogbook: builder.mutation({
+      query: ({ name, state = "Active" }) => ({
+        url: `/logbooks/${encodeURIComponent(name)}`,
+        method: "PUT",
+        body: { name, state }
+      })
+    }),
+    deleteLogbook: builder.mutation({
+      query: ({ name }) => ({
+        url: `/logbooks/${encodeURIComponent(name)}`,
+        method: "DELETE"
+      })
+    }),
+    getLogbookMembers: builder.query({
+      query: ({ name }) => ({
+        url: `/logbooks/${encodeURIComponent(name)}/members`
+      })
+    }),
+    addLogbookMember: builder.mutation({
+      query: ({ name, infnUuid, permissions, visibleFrom = null, visibleTo = null }) => ({
+        url: `/logbooks/${encodeURIComponent(name)}/members`,
+        method: "POST",
+        body: { infnUuid, permissions, visibleFrom, visibleTo }
+      })
+    }),
+    updateLogbookMember: builder.mutation({
+      query: ({ name, infnUuid, permissions, visibleFrom = null, visibleTo = null }) => ({
+        url: `/logbooks/${encodeURIComponent(name)}/members/${encodeURIComponent(infnUuid)}`,
+        method: "PUT",
+        body: { infnUuid, permissions, visibleFrom, visibleTo }
+      })
+    }),
+    deleteLogbookMember: builder.mutation({
+      query: ({ name, infnUuid }) => ({
+        url: `/logbooks/${encodeURIComponent(name)}/members/${encodeURIComponent(infnUuid)}`,
+        method: "DELETE"
       })
     }),
     getArchivedLogbooks: builder.query({
@@ -221,7 +268,10 @@ const ologApi = createApi({
 });
 
 export const TagTypes = {
-  GetLogs: "GetLogs"
+  GetLogs: "GetLogs",
+  Logbooks: "Logbooks",
+  LogbookPermissions: "LogbookPermissions",
+  LogbookMembers: "LogbookMembers"
 };
 
 const enhancedApiWithTags = ologApi.enhanceEndpoints({
@@ -229,6 +279,30 @@ const enhancedApiWithTags = ologApi.enhanceEndpoints({
   endpoints: {
     searchLogs: {
       providesTags: [TagTypes.GetLogs]
+    },
+    getLogbooks: {
+      providesTags: [TagTypes.Logbooks]
+    },
+    getMyLogbookPermissions: {
+      providesTags: [TagTypes.LogbookPermissions]
+    },
+    createLogbook: {
+      invalidatesTags: [TagTypes.Logbooks, TagTypes.LogbookPermissions]
+    },
+    deleteLogbook: {
+      invalidatesTags: [TagTypes.Logbooks, TagTypes.LogbookPermissions]
+    },
+    getLogbookMembers: {
+      providesTags: [TagTypes.LogbookMembers]
+    },
+    addLogbookMember: {
+      invalidatesTags: [TagTypes.LogbookMembers]
+    },
+    updateLogbookMember: {
+      invalidatesTags: [TagTypes.LogbookMembers]
+    },
+    deleteLogbookMember: {
+      invalidatesTags: [TagTypes.LogbookMembers]
     },
     getLogGroup: {
       providesTags: [TagTypes.GetLogs]
