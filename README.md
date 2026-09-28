@@ -40,6 +40,8 @@ Available:
 - Properties editor.
 - HTML preview of log entry, including embedded images.
 - Editing log entries
+- OAuth-authenticated logbook creation and collaborator management.
+- INFN Identity search for assigning reader and writer permissions.
 
 Backlog:
 
@@ -64,6 +66,10 @@ Note that, by default, `VITE_APP_*` variables are only embedded during build tim
 | default is `https://olog.readthedocs.io/en/latest/` |
 | VITE_APP_SUPPORT_HREF                               | URL where support can be found for Olog. Shown on Help page only if provided.                                                                                                                 |
 | VITE_APP_VERSION                                    | Version string for Olog; default is the version defined in `package.json`.                                                                                                                    |
+| VITE_APP_IDENTITY_API_BASE_URL                      | INFN Identity API base URL. Defaults to `https://api.app.infn.it`.                                                                                                                            |
+| VITE_APP_AUTH_UUID_CLAIM                            | JWT claim containing the INFN UUID. Defaults to `preferred_username`; it must match the backend `OAUTH2_CLAIMS_NAME`.                                                                          |
+
+Authenticated users can open `/logbooks` (or use the **Logbooks** navigation button) to create a logbook. The creator becomes its administrator and can search INFN identities, then assign `READ`, `WRITE`, or both permissions.
 
 ## Development
 

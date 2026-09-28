@@ -108,10 +108,11 @@ const AppNavBar = ({ advancedSearchOpen, setAdvancedSearchOpen }) => {
         sx={{
           display: "grid",
           gridTemplateColumns: onHomePage
-            ? "auto 1.25fr auto 2fr"
-            : "auto 1fr auto",
+            ? "auto minmax(0, 1.25fr) auto minmax(0, 2fr)"
+            : "auto minmax(0, 1fr) auto",
           gridTemplateRows: "1fr",
-          height: "70px",
+          minHeight: "70px",
+          height: "auto",
           [theme.breakpoints.down("md")]: {
             height: "auto",
             display: "flex",
@@ -193,7 +194,8 @@ const AppNavBar = ({ advancedSearchOpen, setAdvancedSearchOpen }) => {
           alignItems="center"
           width="100%"
           height="100%"
-          px={5}
+          px={{ xs: 2, lg: 3, xl: 5 }}
+          sx={{ minWidth: 0, boxSizing: "border-box", flexWrap: "wrap", gap: 1, py: 1 }}
         >
           <Button
             component={RouterLink}
@@ -228,10 +230,13 @@ const AppNavBar = ({ advancedSearchOpen, setAdvancedSearchOpen }) => {
               {import.meta.env.VITE_APP_LOGBOOK_NAME || "Olog"}
             </Typography>
           </Button>
-          <nav aria-label="user menu">
+          <nav aria-label="user menu" style={{ minWidth: 0, maxWidth: "100%" }}>
             <List
               sx={{
                 display: "flex",
+                flexWrap: "wrap",
+                alignItems: "center",
+                "& > li": { width: "auto" },
                 padding: "0",
                 gap: "10px"
               }}
@@ -273,17 +278,37 @@ const AppNavBar = ({ advancedSearchOpen, setAdvancedSearchOpen }) => {
                 </ListItem>
               ) : null}
 
-              <ListItem sx={{ padding: "0 0 0 8px" }}>
+              <ListItem sx={{ padding: 0 }}>
+                <InternalButtonLink
+                  to="/logbooks"
+                  variant="outlined"
+                  color="primary"
+                  sx={{
+                    minWidth: "100px",
+                    padding: "6px 15px",
+                    fontSize: "0.8rem",
+                    boxShadow: "none"
+                  }}
+                >
+                  Logbooks
+                </InternalButtonLink>
+              </ListItem>
+
+              <ListItem sx={{ padding: "0 0 0 8px", minWidth: 0, maxWidth: "100%", boxSizing: "border-box" }}>
                 {user?.userName ? (
-                  <Box>
+                  <Tooltip title={user.userName}>
                     <Button
                       onClick={() => setShowLogout(true)}
                       variant="outlined"
                       color="primary"
+                      aria-label={user.userName}
+                      sx={{ minWidth: 0, maxWidth: { xs: "160px", lg: "200px" } }}
                     >
-                      {user.userName}
+                      <Box component="span" sx={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {user.userName}
+                      </Box>
                     </Button>
-                  </Box>
+                  </Tooltip>
                 ) : (
                   <Button
                     onClick={() => setShowLogin(true)}

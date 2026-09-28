@@ -6,6 +6,7 @@ import { ologApi } from "api/ologApi";
 
 const initialState = {
   user: null,
+  accessToken: null,
   showLogin: false,
   showLogout: false
 };
@@ -22,6 +23,14 @@ const authSlice = createSlice({
     },
     setUser: (state, action) => {
       state.user = action.payload;
+    },
+    setOAuthSession: (state, action) => {
+      state.user = action.payload.user;
+      state.accessToken = action.payload.accessToken;
+    },
+    clearOAuthSession: (state) => {
+      state.user = null;
+      state.accessToken = null;
     }
   },
   extraReducers: (builder) => {
@@ -37,7 +46,10 @@ const authSlice = createSlice({
         // on call the get the user, set the user
         ologApi.endpoints.getUser.matchFulfilled,
         (state, { payload }) => {
-          state.user = payload;
+          // A legacy request may finish after the OAuth session was established.
+          if (!state.accessToken) {
+            state.user = payload;
+          }
         }
       )
       .addMatcher(
@@ -91,5 +103,5 @@ export const useShowLogout = () => {
   };
 };
 
-export const { setUser } = authSlice.actions; // Esporta l'azione setUser
+export const { setUser, setOAuthSession, clearOAuthSession } = authSlice.actions;
 export default authSlice.reducer;

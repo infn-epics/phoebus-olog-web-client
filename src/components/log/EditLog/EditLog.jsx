@@ -94,8 +94,21 @@ const EditLog = ({ log }) => {
           .catch((error) => {
             setUpdatedLogEntryId(null);
             setEditInProgress(false);
-            enqueueSnackbar("Failed to edit log entry. Please try again later.", {
-              variant: "error"
+            let message = "Failed to edit log entry. Please try again later.";
+            if (error?.status === 403) {
+              const prefix = "Missing WRITE permission for logbook ";
+              const detail = error?.data?.message;
+              const logbookName = typeof detail === "string" && detail.startsWith(prefix)
+                ? detail.slice(prefix.length)
+                : null;
+              message = logbookName
+                ? `You do not have permission to edit entries in logbook "${logbookName}". Contact the logbook administrator to request write access.`
+                : "You do not have permission to edit this log entry. Contact the logbook administrator to request write access.";
+            } else if (error?.status === 401) {
+              message = "Your session has expired or you are not signed in. Please sign in again to edit this log entry.";
+            }
+            enqueueSnackbar(message, {
+              severity: "error"
             });
             console.error("Failed to edit log entry.", error);
             return error;

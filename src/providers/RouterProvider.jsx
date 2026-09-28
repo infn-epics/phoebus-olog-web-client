@@ -12,6 +12,7 @@ import { HelpView } from "views/HelpView";
 import LogHistoryView from "views/LogHistoryView";
 import NotFoundView from "views/NotFoundView";
 import ReplyLogView from "views/ReplyLogView";
+import LogbooksView from "views/LogbooksView";
 // import LogEntriesView from "src/components/LogEntriesView/LogEntriesView";
 
 export const routes = [
@@ -47,6 +48,10 @@ export const routes = [
       {
         path: "logs/:id/history",
         element: <LogHistoryView />
+      },
+      {
+        path: "logbooks",
+        element: <LogbooksView />
       },
       {
         path: "help",

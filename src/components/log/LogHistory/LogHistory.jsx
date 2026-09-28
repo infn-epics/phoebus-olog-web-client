@@ -14,6 +14,7 @@ import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import { FormattedDate } from "components/shared/FormattedDate";
 import LogDetails from "src/components/log/LogDetails/LogDetails";
 import { KeyValueTable } from "src/components/log/LogDetails/KeyValueTable";
+import IdentityName from "src/components/shared/IdentityName";
 
 const LogHistoryHeader = ({ log }) => (
   <Box
@@ -25,7 +26,7 @@ const LogHistoryHeader = ({ log }) => (
       data={[
         {
           name: "Author",
-          value: log.owner
+          value: <IdentityName identifier={log.owner} />
         },
         {
           name: log.modifyDate ? "Edited" : "Created",

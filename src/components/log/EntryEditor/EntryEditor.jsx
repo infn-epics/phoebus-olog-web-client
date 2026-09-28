@@ -25,6 +25,7 @@ import EntryTypeSelect from "components/shared/input/managed/EntryTypeSelect";
 import { PropertyCollectionInput } from "components/shared/input/managed/PropertyCollectionInput";
 import TemplateSelect from "components/shared/input/managed/TemplateSelect";
 import { ologApi } from "api/ologApi.js";
+import { useUser } from "features/authSlice";
 
 const errorText =
   "Misconfigured level values. Please contact your administrator.";
@@ -54,6 +55,21 @@ export const EntryEditor = ({
   //   }
   // }, [defaultLevel, setValue, attachmentsDisabled]);
   const { data: logbooks } = ologApi.endpoints.getLogbooks.useQuery();
+  const user = useUser();
+  const { data: logbookPermissions } =
+    ologApi.endpoints.getMyLogbookPermissions.useQuery(undefined, {
+      skip: !user
+    });
+  const writableLogbooks = logbookPermissions
+    ? logbooks?.filter((logbook) => {
+        const effective = logbookPermissions.find(
+          (item) => item.logbook === logbook.name
+        );
+        return effective?.permissions?.some((permission) =>
+          ["WRITE", "ADMIN"].includes(permission)
+        );
+      })
+    : logbooks;
   const { data: tags } = ologApi.endpoints.getTags.useQuery();
   const { data: levels, error: levelsError } =
     ologApi.endpoints.getLevels.useQuery();
@@ -120,7 +136,7 @@ export const EntryEditor = ({
                 val?.length > 0 || "Select at least one logbook"
             }
           }}
-          options={logbooks}
+          options={writableLogbooks}
           getOptionLabel={getOptionLabel}
           isOptionEqualToValue={isOptionEqualToValue}
         />

@@ -7,6 +7,7 @@ import LogDetailActionButton from "./LogDetailActionButton";
 import { FormattedDate } from "src/components/shared/FormattedDate";
 import { InternalLink } from "src/components/shared/Link";
 import { useUser } from "src/features/authSlice";
+import IdentityName from "src/components/shared/IdentityName";
 
 const LogHeader = ({ log, expanded, className }) => {
   const [copyUrlLabel, setCopyUrlLabel] = useState("Copy URL");
@@ -58,7 +59,7 @@ const LogHeader = ({ log, expanded, className }) => {
               onClick={expanded ? stopPropagation : undefined}
               sx={{ cursor: cursorStyle, lineHeight: "100%" }}
             >
-              {log.owner}
+              <IdentityName identifier={log.owner} />
             </Typography>
             <Tooltip title={expanded ? "Log ID" : null}>
               <Typography

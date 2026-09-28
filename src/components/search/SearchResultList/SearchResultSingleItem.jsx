@@ -9,6 +9,7 @@ import { CommonMark } from "components/shared/CommonMark";
 import { EntryTypeChip } from "src/components/log/EntryTypeChip";
 import { useAdvancedSearch } from "src/features/advancedSearchReducer";
 import { useEnhancedSearchParams } from "src/hooks/useEnhancedSearchParams";
+import IdentityName from "src/components/shared/IdentityName";
 
 export const SearchResultSingleItem = ({
   log,
@@ -70,7 +71,7 @@ export const SearchResultSingleItem = ({
           variant="body2"
           lineHeight={1.2}
         >
-          {log.owner}
+          <IdentityName identifier={log.owner} />
         </Typography>
 
         <FormattedDate

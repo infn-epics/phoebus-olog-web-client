@@ -1,6 +1,7 @@
 import { Box, Stack } from "@mui/material";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import DownloadIcon from "@mui/icons-material/Download";
+import { useAttachmentUrl } from "src/hooks/useAttachmentUrl";
 
 export const isLocalFile = (attachment) => {
   return Boolean(attachment?.file);
@@ -23,6 +24,7 @@ export const ImageOrFile = ({
   className,
   ...props
 }) => {
+  const resolved = useAttachmentUrl(isImage(attachment) ? attachment.url : null);
   return (
     <Stack
       fontSize="5rem"
@@ -61,7 +63,7 @@ export const ImageOrFile = ({
       {/*=======*/}
       {isImage(attachment) ? (
         <img
-          src={attachment.url}
+          src={resolved.url}
           alt={alt}
           style={{
             width: "100%",
