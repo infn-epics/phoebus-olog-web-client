@@ -46,6 +46,7 @@ const EditLog = ({ log }) => {
     },
     values: {
       ...log,
+      description: log.source || log.description,
       level: { name: log.level, defaultLevel: false }
     }
   });
@@ -80,8 +81,8 @@ const EditLog = ({ log }) => {
       properties: formData.properties,
       title: formData.title,
       level: formData.level?.name,
-      description: formData.description,
-      attachments: formData.attachments ?? []
+      description: formData.description || "",
+      attachments: formData.attachments || []
     };
 
 
