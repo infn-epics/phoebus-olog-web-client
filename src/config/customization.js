@@ -57,7 +57,9 @@ let customization = {
    */
   APP_BASE_URL: import.meta.env.VITE_APP_BASE_URL, // e.g. http://localhost:8080/Olog
   IDENTITY_API_BASE_URL:
-    import.meta.env.VITE_APP_IDENTITY_API_BASE_URL || "https://api.app.infn.it",
+    import.meta.env.VITE_APP_IDENTITY_API_BASE_URL || "https://api.app.infn.it/identity",
+  GODIVA_API_BASE_URL:
+    import.meta.env.VITE_APP_GODIVA_API_BASE_URL || "https://godiva.dsi.infn.it/api",
   OAUTH2_ENABLED: import.meta.env.VITE_APP_OAUTH2_ENABLED === "true",
 
   /**

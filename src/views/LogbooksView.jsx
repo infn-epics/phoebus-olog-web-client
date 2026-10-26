@@ -2,12 +2,17 @@ import { useEffect, useMemo, useState } from "react";
 import {
   Alert, Autocomplete, Box, Button, Checkbox, CircularProgress,
   FormControlLabel, IconButton, Paper, Stack, Table, TableBody,
-  TableCell, TableHead, TableRow, TextField, Typography
+  TableCell, TableHead, TableRow, TextField, Typography, MenuItem
 } from "@mui/material";
+import { LogbookQuota } from "components/log/StoragePanel";
+import LogbookExportActions from "components/log/LogbookExportActions";
+import GodivaSourceSelector from "components/log/GodivaSourceSelector";
+import { isExperimentResponsible } from "components/log/godivaPermissions";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { ologApi } from "api/ologApi";
 import { identityApi } from "api/identityApi";
 import { useAuthData } from "src/auth/authContext";
+import { useUser } from "features/authSlice";
 import { useCustomSnackbar } from "src/hooks/useCustomSnackbar";
 
 const errorMessage = (error, fallback) =>
@@ -104,9 +109,13 @@ const MemberRow = ({ logbook, member }) => {
 };
 
 const LogbooksView = () => {
-  const { isAuthenticated, isAuthenticating, authError, logIn } = useAuthData();
+  const { isAuthenticated, isAuthenticating, authError, logIn, token } = useAuthData();
+  const user = useUser();
   const { enqueueSnackbar } = useCustomSnackbar();
   const [newName, setNewName] = useState("");
+  const [creationMode, setCreationMode] = useState("manual");
+  const [structure, setStructure] = useState(null);
+  const [experiment, setExperiment] = useState(null);
   const [selectedLogbook, setSelectedLogbook] = useState("");
   const [identitySearch, setIdentitySearch] = useState("");
   const [selectedIdentity, setSelectedIdentity] = useState(null);
@@ -120,17 +129,33 @@ const LogbooksView = () => {
       skip: !isAuthenticated,
       refetchOnMountOrArgChange: true
     });
+  const storage = ologApi.endpoints.getStorageSummary.useQuery(undefined, {
+    skip: !isAuthenticated, refetchOnMountOrArgChange: true
+  });
+  const storageByLogbook = new Map((storage.currentData?.logbooks ?? []).map((item) => [item.logbook, item]));
+  const selectedLogbookIsAdmin = logbookPermissions.some((item) =>
+    item.logbook === selectedLogbook && (item.admin || item.permissions?.includes("ADMIN"))
+  );
   const [createLogbook, { isLoading: isCreating }] = ologApi.endpoints.createLogbook.useMutation();
   const [deleteLogbook] = ologApi.endpoints.deleteLogbook.useMutation();
   const { data: members = [], isFetching: membersLoading } =
-    ologApi.endpoints.getLogbookMembers.useQuery({ name: selectedLogbook }, { skip: !selectedLogbook || !isAuthenticated });
+    ologApi.endpoints.getLogbookMembers.useQuery({ name: selectedLogbook }, { skip: !selectedLogbook || !selectedLogbookIsAdmin || !isAuthenticated });
   const [addMember, { isLoading: isAdding }] = ologApi.endpoints.addLogbookMember.useMutation();
   const [searchIdentities, { data: identities = [], isFetching: identitiesLoading }] =
     identityApi.endpoints.searchIdentities.useLazyQuery();
+  const authorization = identityApi.endpoints.getIdentityAuthorization.useQuery(user?.uuid, {
+    skip: !isAuthenticated || creationMode !== "godiva" || !user?.uuid,
+    refetchOnMountOrArgChange: true
+  });
+  const canCreateFromGodiva = !!structure?.path && !!experiment?.path &&
+    !authorization.isFetching && !authorization.error &&
+    isExperimentResponsible(authorization.currentData, experiment);
 
-  const managedLogbooks = useMemo(
-    () => logbookPermissions.filter((item) => item.admin || item.permissions?.includes("ADMIN"))
-      .map((item) => ({ name: item.logbook })),
+  const accessibleLogbooks = useMemo(
+    () => logbookPermissions.filter((item) => item.admin ||
+      item.permissions?.some((permission) => ["READ", "WRITE", "ADMIN"].includes(permission)))
+      .map((item) => ({ name: item.logbook, permissions: item.permissions ?? [],
+        admin: item.admin || item.permissions?.includes("ADMIN") })),
     [logbookPermissions]
   );
 
@@ -160,9 +185,19 @@ const LogbooksView = () => {
   const create = async () => {
     const name = newName.trim();
     if (!name) return;
+    if (creationMode === "godiva" && !canCreateFromGodiva) return;
     try {
-      await createLogbook({ name }).unwrap();
+      await createLogbook({
+        name,
+        officialExperiment: creationMode === "godiva",
+        experimentLdapPath: creationMode === "godiva"
+          ? experiment.path.replace(/:+$/, "")
+          : null
+      }).unwrap();
       setNewName("");
+      setStructure(null);
+      setExperiment(null);
+      setCreationMode("manual");
       setSelectedLogbook(name);
       enqueueSnackbar("Logbook created.", { severity: "success" });
     } catch (error) {
@@ -209,33 +244,65 @@ const LogbooksView = () => {
     <Typography variant="h4">Logbooks</Typography>
     <Paper sx={{ p: 3 }}>
       <Typography variant="h6" mb={2}>Create a logbook</Typography>
+      <Stack gap={2} mb={2}>
+        <TextField select label="User source" value={creationMode} disabled={isCreating} onChange={(event) => {
+          setCreationMode(event.target.value);
+          setStructure(null);
+          setExperiment(null);
+        }}>
+          <MenuItem value="manual">Manual selection</MenuItem>
+          <MenuItem value="godiva">Godiva — structure and experiment</MenuItem>
+        </TextField>
+        {creationMode === "godiva" && <Alert severity="info">Select the experiment for this official logbook. Experiment affiliates can read it automatically; administrators can grant write access to individual collaborators.</Alert>}
+        {creationMode === "godiva" && <GodivaSourceSelector
+          structure={structure}
+          experiment={experiment}
+          disabled={isCreating}
+          onStructureChange={(value) => { setStructure(value); setExperiment(null); }}
+          onExperimentChange={setExperiment}
+        />}
+        {creationMode === "godiva" && authorization.isFetching && <Typography role="status">Checking experiment responsibilities…</Typography>}
+        {creationMode === "godiva" && authorization.error && <Alert severity="error" action={<Button onClick={authorization.refetch}>Retry</Button>}>Unable to verify your experiment responsibilities.</Alert>}
+        {creationMode === "godiva" && !user?.uuid && <Alert severity="error">Unable to identify the signed-in user.</Alert>}
+        {creationMode === "godiva" && experiment && user?.uuid && !authorization.isFetching && !authorization.error && !canCreateFromGodiva && <Alert severity="warning">Only a responsible person for the selected experiment can create this logbook.</Alert>}
+      </Stack>
       <Stack direction={{ xs: "column", sm: "row" }} gap={2}>
         <TextField label="Logbook name" value={newName} onChange={(event) => setNewName(event.target.value)} fullWidth />
-        <Button variant="contained" disabled={!newName.trim() || isCreating} onClick={create}>Create</Button>
+        <Button variant="contained" disabled={!newName.trim() || isCreating || (creationMode === "godiva" && !canCreateFromGodiva)} onClick={create}>Create</Button>
       </Stack>
     </Paper>
 
     <Paper sx={{ p: 3 }}>
       <Typography variant="h6" mb={2}>Your logbooks</Typography>
+      <Typography variant="body2" color="text.secondary" mb={2}>Each logbook has its own quota. Usage includes JSON data in Elasticsearch, log entries and archived versions; binary attachments in MongoDB are excluded.</Typography>
+      {storage.error && <Alert severity="error" action={<Button onClick={storage.refetch}>Retry</Button>}>Unable to calculate storage usage.</Alert>}
       {logbooksError && <Alert severity="error" action={<Button onClick={reloadLogbooks}>Retry</Button>}>
         {errorMessage(logbooksError, "Unable to load your logbooks. Please retry.")}
       </Alert>}
-      {!logbooksError && (isLoading ? <CircularProgress aria-label="Loading logbooks" /> : managedLogbooks.length === 0
-        ? <Typography color="text.secondary">You do not administer any logbooks.</Typography>
-        : <Table size="small">
-          <TableHead><TableRow><TableCell>Name</TableCell><TableCell align="right">Actions</TableCell></TableRow></TableHead>
-          <TableBody>{managedLogbooks.map((logbook) =>
+      {!logbooksError && (isLoading ? <CircularProgress aria-label="Loading logbooks" /> : accessibleLogbooks.length === 0
+        ? <Typography color="text.secondary">No accessible logbooks.</Typography>
+        : <Box sx={{ overflowX: "auto" }}><Table size="small">
+          <TableHead><TableRow><TableCell>Name</TableCell><TableCell>Storage quota</TableCell><TableCell>Permissions</TableCell><TableCell align="right">Actions</TableCell></TableRow></TableHead>
+          <TableBody>{accessibleLogbooks.map((logbook) =>
             <TableRow key={logbook.name} selected={selectedLogbook === logbook.name}>
               <TableCell>{logbook.name}</TableCell>
+              <TableCell>{storageByLogbook.has(logbook.name)
+                ? <LogbookQuota logbook={storageByLogbook.get(logbook.name)} />
+                : storage.isFetching ? "Loading…" : storage.error ? "Unavailable" : "—"}</TableCell>
+              <TableCell>{logbook.admin ? "Administrator" : logbook.permissions.join(" / ")}</TableCell>
               <TableCell align="right">
-                <Button onClick={() => setSelectedLogbook(logbook.name)}>Manage</Button>
-                <IconButton aria-label={`Delete ${logbook.name}`} onClick={() => removeLogbook(logbook.name)}><DeleteIcon /></IconButton>
+                <Button component="a" href={`/logs?logbooks=${encodeURIComponent(logbook.name)}`}>Open</Button>
+                {logbook.admin && <>
+                  <Button onClick={() => setSelectedLogbook(logbook.name)}>Manage</Button>
+                  <LogbookExportActions name={logbook.name} token={token} />
+                  <IconButton aria-label={`Delete ${logbook.name}`} onClick={() => removeLogbook(logbook.name)}><DeleteIcon /></IconButton>
+                </>}
               </TableCell>
             </TableRow>)}</TableBody>
-        </Table>)}
+        </Table></Box>)}
     </Paper>
 
-    {selectedLogbook && <Paper sx={{ p: 3 }}>
+    {selectedLogbook && selectedLogbookIsAdmin && <Paper sx={{ p: 3 }}>
       <Typography variant="h6">Collaborators — {selectedLogbook}</Typography>
       <Box mt={2}>
         <Autocomplete

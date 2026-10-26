@@ -3,6 +3,7 @@ import userSliceReducer from "./authSlice";
 import advancedSearchReducer from "./advancedSearchReducer";
 import searchPageParamsReducer from "features/searchPageParamsReducer";
 import { ologApi } from "api/ologApi";
+import { godivaApi } from "api/godivaApi";
 import { identityApi } from "api/identityApi";
 
 export const setupStore = (preloadedState) => {
@@ -12,6 +13,7 @@ export const setupStore = (preloadedState) => {
     if (previousUser !== store.getState().auth.user?.uuid) {
       store.dispatch(ologApi.util.resetApiState());
       store.dispatch(identityApi.util.resetApiState());
+      store.dispatch(godivaApi.util.resetApiState());
     }
     return result;
   };
@@ -21,10 +23,11 @@ export const setupStore = (preloadedState) => {
       advancedSearch: advancedSearchReducer,
       [ologApi.reducerPath]: ologApi.reducer,
       [identityApi.reducerPath]: identityApi.reducer,
+      [godivaApi.reducerPath]: godivaApi.reducer,
       auth: userSliceReducer
     },
     middleware: (getDefaultMiddleware) =>
-      getDefaultMiddleware().concat(clearSessionCache, ologApi.middleware, identityApi.middleware),
+      getDefaultMiddleware().concat(clearSessionCache, ologApi.middleware, identityApi.middleware, godivaApi.middleware),
     preloadedState
   });
 };

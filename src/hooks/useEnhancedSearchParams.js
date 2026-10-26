@@ -14,6 +14,14 @@ const options = {
   }
 };
 
+const withoutAuthParams = (params) => {
+  const copy = { ...params };
+  for (const key of ["code", "session_state", "state", "iss", "error", "error_description", "error_uri"]) {
+    delete copy[key];
+  }
+  return copy;
+};
+
 export function withoutParams(searchParams) {
   const copy = { ...searchParams };
   delete copy.query;
@@ -52,19 +60,16 @@ export const useEnhancedSearchParams = () => {
   const [params, setParams] = useSearchParams();
 
   const toSearchParams = useCallback((searchParams) => {
-    return queryStringParser.parse(searchParams, options);
+    return withoutAuthParams(queryStringParser.parse(searchParams, options));
   }, []);
 
   const toQueryString = useCallback((searchParams) => {
-    return queryStringParser.stringify(searchParams, options);
+    return queryStringParser.stringify(withoutAuthParams(searchParams), options);
   }, []);
 
   const searchParams = useMemo(() => {
-    return queryStringParser.parse(
-      decodeURIComponent(params.toString()),
-      options
-    );
-  }, [params]);
+    return toSearchParams(decodeURIComponent(params.toString()));
+  }, [params, toSearchParams]);
 
   const setSearchParams = useCallback(
     (newParams) => {

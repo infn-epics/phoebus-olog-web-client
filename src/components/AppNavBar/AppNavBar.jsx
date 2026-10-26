@@ -31,6 +31,7 @@ import {
   Tooltip
 } from "@mui/material";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
+import QuotaAdminNavItem from "./QuotaAdminNavItem";
 import LockIcon from "@mui/icons-material/Lock";
 import HomeIcon from "@mui/icons-material/Home";
 import FilterAltIcon from "@mui/icons-material/FilterAlt";
@@ -293,6 +294,8 @@ const AppNavBar = ({ advancedSearchOpen, setAdvancedSearchOpen }) => {
                   Logbooks
                 </InternalButtonLink>
               </ListItem>
+
+              <QuotaAdminNavItem />
 
               <ListItem sx={{ padding: "0 0 0 8px", minWidth: 0, maxWidth: "100%", boxSizing: "border-box" }}>
                 {user?.userName ? (

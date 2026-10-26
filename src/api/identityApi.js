@@ -14,6 +14,16 @@ export const identityApi = createApi({
     }
   }),
   endpoints: (builder) => ({
+    getIdentityAuthorization: builder.query({
+      query: (uuid) => ({
+        url: `/get/auth/${encodeURIComponent(uuid)}`,
+        validateStatus: (response, body) =>
+          response.status >= 200 && response.status < 300 &&
+          !body?.errorCode && Array.isArray(body?.payload?.isMemberOf) &&
+          body.payload.isMemberOf.every((membership) => typeof membership === "string")
+      }),
+      transformResponse: (response) => response.payload
+    }),
     getIdentity: builder.query({
       query: (uuid) => `/get/${encodeURIComponent(uuid)}`,
       transformResponse: (response) => response?.payload ?? null

@@ -96,11 +96,29 @@ const ologApi = createApi({
     getMyLogbookPermissions: builder.query({
       query: () => ({ url: "/logbooks/permissions/me" })
     }),
+    getStoragePermissions: builder.query({
+      query: () => ({ url: "/storage/permissions/me" })
+    }),
+    getStorageSummary: builder.query({
+      query: () => ({ url: "/storage/me" })
+    }),
+    requestStorageIncrease: builder.mutation({
+      query: ({ logbook, requestedQuotaBytes, reason }) => ({ url: "/storage/requests", method: "POST", body: { logbook, requestedQuotaBytes, reason } })
+    }),
+    getStorageRequests: builder.query({
+      query: () => ({ url: "/storage/requests" })
+    }),
+    reviewStorageRequest: builder.mutation({
+      query: ({ logbook, requestId, approved, note }) => ({
+        url: `/storage/requests/${encodeURIComponent(logbook)}/${encodeURIComponent(requestId)}/review`,
+        method: "POST", body: { approved, note }
+      })
+    }),
     createLogbook: builder.mutation({
-      query: ({ name, state = "Active" }) => ({
+      query: ({ name, state = "Active", officialExperiment = false, experimentLdapPath = null }) => ({
         url: `/logbooks/${encodeURIComponent(name)}`,
         method: "PUT",
-        body: { name, state }
+        body: { name, state, officialExperiment, experimentLdapPath }
       })
     }),
     deleteLogbook: builder.mutation({
@@ -271,7 +289,9 @@ export const TagTypes = {
   GetLogs: "GetLogs",
   Logbooks: "Logbooks",
   LogbookPermissions: "LogbookPermissions",
-  LogbookMembers: "LogbookMembers"
+  LogbookMembers: "LogbookMembers",
+  Storage: "Storage",
+  StorageRequests: "StorageRequests"
 };
 
 const enhancedApiWithTags = ologApi.enhanceEndpoints({
@@ -286,23 +306,29 @@ const enhancedApiWithTags = ologApi.enhanceEndpoints({
     getMyLogbookPermissions: {
       providesTags: [TagTypes.LogbookPermissions]
     },
+    getStorageSummary: { providesTags: [TagTypes.Storage] },
+    getStorageRequests: { providesTags: [TagTypes.StorageRequests] },
+    requestStorageIncrease: { invalidatesTags: [TagTypes.Storage, TagTypes.StorageRequests] },
+    reviewStorageRequest: { invalidatesTags: [TagTypes.Storage, TagTypes.StorageRequests] },
+    createLog: { invalidatesTags: [TagTypes.GetLogs, TagTypes.Storage] },
+    editLog: { invalidatesTags: [TagTypes.GetLogs, TagTypes.Storage] },
     createLogbook: {
-      invalidatesTags: [TagTypes.Logbooks, TagTypes.LogbookPermissions]
+      invalidatesTags: [TagTypes.Logbooks, TagTypes.LogbookPermissions, TagTypes.Storage]
     },
     deleteLogbook: {
-      invalidatesTags: [TagTypes.Logbooks, TagTypes.LogbookPermissions]
+      invalidatesTags: [TagTypes.Logbooks, TagTypes.LogbookPermissions, TagTypes.Storage]
     },
     getLogbookMembers: {
       providesTags: [TagTypes.LogbookMembers]
     },
     addLogbookMember: {
-      invalidatesTags: [TagTypes.LogbookMembers]
+      invalidatesTags: [TagTypes.LogbookMembers, TagTypes.Storage]
     },
     updateLogbookMember: {
-      invalidatesTags: [TagTypes.LogbookMembers]
+      invalidatesTags: [TagTypes.LogbookMembers, TagTypes.Storage]
     },
     deleteLogbookMember: {
-      invalidatesTags: [TagTypes.LogbookMembers]
+      invalidatesTags: [TagTypes.LogbookMembers, TagTypes.Storage]
     },
     getLogGroup: {
       providesTags: [TagTypes.GetLogs]
