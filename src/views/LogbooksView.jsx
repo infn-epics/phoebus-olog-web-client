@@ -136,7 +136,7 @@ const LogbooksView = () => {
 
   useEffect(() => {
     const search = identitySearch.trim();
-    if (!isAuthenticated || search.length < 2) return undefined;
+    if (!isAuthenticated || search.length < 2) {return undefined;}
     const timer = window.setTimeout(() => searchIdentities({ search }, true), 350);
     return () => window.clearTimeout(timer);
   }, [identitySearch, searchIdentities, isAuthenticated]);
@@ -159,7 +159,7 @@ const LogbooksView = () => {
 
   const create = async () => {
     const name = newName.trim();
-    if (!name) return;
+    if (!name) {return;}
     try {
       await createLogbook({ name }).unwrap();
       setNewName("");
@@ -171,10 +171,10 @@ const LogbooksView = () => {
   };
 
   const removeLogbook = async (name) => {
-    if (!window.confirm(`Delete the logbook ${name}?`)) return;
+    if (!window.confirm(`Delete the logbook ${name}?`)) {return;}
     try {
       await deleteLogbook({ name }).unwrap();
-      if (selectedLogbook === name) setSelectedLogbook("");
+      if (selectedLogbook === name) {setSelectedLogbook("");}
       enqueueSnackbar("Logbook deleted.", { severity: "success" });
     } catch (error) {
       enqueueSnackbar(errorMessage(error, "Unable to delete logbook."), { severity: "error" });
@@ -188,7 +188,7 @@ const LogbooksView = () => {
   };
 
   const add = async () => {
-    if (!selectedIdentity?.infnUUID || newPermissions.length === 0) return;
+    if (!selectedIdentity?.infnUUID || newPermissions.length === 0) {return;}
     try {
       if (invalidPeriod) {
         return;
@@ -220,9 +220,11 @@ const LogbooksView = () => {
       {logbooksError && <Alert severity="error" action={<Button onClick={reloadLogbooks}>Retry</Button>}>
         {errorMessage(logbooksError, "Unable to load your logbooks. Please retry.")}
       </Alert>}
-      {!logbooksError && (isLoading ? <CircularProgress aria-label="Loading logbooks" /> : managedLogbooks.length === 0
-        ? <Typography color="text.secondary">You do not administer any logbooks.</Typography>
-        : <Table size="small">
+      {!logbooksError && isLoading && <CircularProgress aria-label="Loading logbooks" />}
+      {!logbooksError && !isLoading && managedLogbooks.length === 0 &&
+        <Typography color="text.secondary">You do not administer any logbooks.</Typography>}
+      {!logbooksError && !isLoading && managedLogbooks.length > 0 &&
+        <Table size="small">
           <TableHead><TableRow><TableCell>Name</TableCell><TableCell align="right">Actions</TableCell></TableRow></TableHead>
           <TableBody>{managedLogbooks.map((logbook) =>
             <TableRow key={logbook.name} selected={selectedLogbook === logbook.name}>
@@ -232,7 +234,7 @@ const LogbooksView = () => {
                 <IconButton aria-label={`Delete ${logbook.name}`} onClick={() => removeLogbook(logbook.name)}><DeleteIcon /></IconButton>
               </TableCell>
             </TableRow>)}</TableBody>
-        </Table>)}
+        </Table>}
     </Paper>
 
     {selectedLogbook && <Paper sx={{ p: 3 }}>

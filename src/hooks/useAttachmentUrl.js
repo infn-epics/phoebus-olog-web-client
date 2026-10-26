@@ -4,7 +4,7 @@ import customization from "src/config/customization";
 
 export function isProtectedAttachment(url) {
   if (!url) {return false;}
-  const base = new URL(`${customization.APP_BASE_URL.replace(/\/$/, "")}/`, window.location.origin);
+  const base = new URL(`${customization.BACKEND_URL.replace(/\/$/, "")}/`, window.location.origin);
   const target = new URL(url, window.location.origin);
   return target.origin === base.origin && (target.pathname.startsWith(`${base.pathname}attachment/`) || target.pathname.startsWith(`${base.pathname}logs/attachments/`));
 }

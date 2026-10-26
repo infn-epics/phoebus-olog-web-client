@@ -1,6 +1,6 @@
 import { afterEach, expect, it, vi } from "vitest";
 import { loadAttachmentUrl } from "./useAttachmentUrl";
-vi.mock("src/config/customization", () => ({ default: { APP_BASE_URL: "https://olog.example/Olog" } }));
+vi.mock("src/config/customization", () => ({ default: { BACKEND_URL: "https://olog.example/Olog" } }));
 vi.mock("src/auth/authContext", () => ({ useAuthData: () => ({}) }));
 afterEach(() => vi.unstubAllGlobals());
 
