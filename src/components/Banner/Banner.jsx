@@ -163,7 +163,7 @@ export const Banner = () => {
             <List>
               <ListItem>
                 {(() => {
-                  if (import.meta.env.VITE_APP_OAUTH2_ENABLED) {
+                  if (customization.OAUTH2_ENABLED) {
                     if (token) {
                       return (
                         <>

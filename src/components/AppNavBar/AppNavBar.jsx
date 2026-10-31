@@ -78,7 +78,7 @@ const AppNavBar = ({ advancedSearchOpen, setAdvancedSearchOpen }) => {
 
   const performLogin = () => {
     console.info("[Auth] Performing login");
-    if (import.meta.env.VITE_APP_OAUTH2_ENABLED) {
+    if (customization.OAUTH2_ENABLED) {
       console.info("[Auth] OAuth2 login mode ENABLED");
       oauthLogIn();
     } else {
@@ -87,7 +87,7 @@ const AppNavBar = ({ advancedSearchOpen, setAdvancedSearchOpen }) => {
     }
   };
 
-  if (import.meta.env.VITE_APP_OAUTH2_ENABLED) {
+  if (customization.OAUTH2_ENABLED) {
     console.info("[Auth] OAuth2 login mode ENABLED");
   } else {
     console.info("[Auth] Classic username/password login mode ENABLED");

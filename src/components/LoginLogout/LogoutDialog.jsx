@@ -21,11 +21,12 @@ import Modal from "components/shared/Modal";
 import { ologApi } from "api/ologApi";
 import { useShowLogout } from "features/authSlice";
 import { useAuthData } from "src/auth/authContext";
+import customization from "src/config/customization";
 
 
 const LogoutDialog = () => {
   const [logoutErrorMessage, setLogoutErrorMessage] = useState("");
-  const [ { isSuccess, error }] = ologApi.endpoints.logout.useMutation();
+  const [logout, { isSuccess, error }] = ologApi.endpoints.logout.useMutation();
   const { showLogout, setShowLogout } = useShowLogout();
   const { hardLogout } = useAuthData();
 
@@ -85,8 +86,13 @@ const LogoutDialog = () => {
             variant="contained"
             onClick={() => {
               try {
-                hardLogout(); // ✅ logout originale della libreria
-                setShowLogout(false);
+                if (customization.OAUTH2_ENABLED) {
+                  hardLogout(); // ✅ logout originale della libreria
+                  setShowLogout(false);
+                } else {
+                  // Classic login: end the Olog session, the dialog closes on success
+                  logout();
+                }
               } catch (e) {
                 setLogoutErrorMessage("Logout failed. Please try again.");
               }
