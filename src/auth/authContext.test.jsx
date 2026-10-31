@@ -3,12 +3,16 @@ import { cleanup, render, screen } from "@testing-library/react";
 import { AuthContext } from "react-oauth2-code-pkce";
 import { AuthDataProvider, useAuthData } from "./authContext";
 
+const customization = vi.hoisted(() => ({ OAUTH2_ENABLED: true }));
 vi.mock("react-redux", () => ({ useDispatch: () => dispatch }));
 vi.mock("features/authSlice", () => ({
   setOAuthSession: (payload) => ({ type: "session", payload }),
-  clearOAuthSession: () => ({ type: "clear" })
+  clearOAuthSession: () => ({ type: "clear" }),
+  useUser: () => sessionUser
 }));
+vi.mock("src/config/customization", () => ({ default: customization }));
 const dispatch = vi.fn();
+let sessionUser = null;
 
 function SessionStatus() {
   const { isAuthenticated, isAuthenticating, authError } = useAuthData();
@@ -22,7 +26,12 @@ function renderSession(overrides) {
   return JSON.parse(screen.getByTestId("session").textContent);
 }
 
-afterEach(() => { cleanup(); vi.clearAllMocks(); });
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+  customization.OAUTH2_ENABLED = true;
+  sessionUser = null;
+});
 
 describe("OAuth session status", () => {
   it("keeps a token authenticated during its final 30 seconds", () => {
@@ -44,5 +53,26 @@ describe("OAuth session status", () => {
     const status = renderSession({ loginInProgress: true, error: "Token request failed" });
     expect(status.isAuthenticating).toBe(false);
     expect(status.authError).toBe("Token request failed");
+  });
+});
+
+describe("Classic session status", () => {
+  it("is authenticated once Olog returned a user", () => {
+    customization.OAUTH2_ENABLED = false;
+    sessionUser = { userName: "epics" };
+    expect(renderSession({}).isAuthenticated).toBe(true);
+  });
+
+  it("is not authenticated without a user", () => {
+    customization.OAUTH2_ENABLED = false;
+    expect(renderSession({}).isAuthenticated).toBe(false);
+  });
+
+  it("ignores the placeholder token of a missing AuthProvider", () => {
+    customization.OAUTH2_ENABLED = false;
+    const status = renderSession({ token: "placeholder", loginInProgress: true });
+    expect(status.isAuthenticated).toBe(false);
+    expect(status.isAuthenticating).toBe(false);
+    expect(dispatch).not.toHaveBeenCalledWith(expect.objectContaining({ type: "session" }));
   });
 });

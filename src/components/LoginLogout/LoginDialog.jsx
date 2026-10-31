@@ -24,6 +24,7 @@ import { TextInput } from "components/shared/input/TextInput";
 import { ologApi } from "api/ologApi";
 import { useShowLogin } from "features/authSlice";
 import { useAuthData } from "src/auth/authContext.jsx";
+import customization from "src/config/customization";
 
 const LoginDialog = () => {
   const { control, handleSubmit, reset, resetField, setFocus } = useForm();
@@ -40,7 +41,7 @@ const LoginDialog = () => {
   };
 
   const handleLogin = (data) => {
-    if (import.meta.env.VITE_APP_OAUTH2_ENABLED) {
+    if (customization.OAUTH2_ENABLED) {
       // bypass login form, usa OAuth2
       oauthLogIn();
     } else {
@@ -92,7 +93,7 @@ const LoginDialog = () => {
           gap={2}
           marginY={2}
         >
-          {!import.meta.env.VITE_APP_OAUTH2_ENABLED && (
+          {!customization.OAUTH2_ENABLED && (
             <>
               <TextInput
                 name="username"
@@ -135,7 +136,7 @@ const LoginDialog = () => {
             disabled={isLoading}
           >
             {/* eslint-disable-next-line no-nested-ternary */}
-            {import.meta.env.VITE_APP_OAUTH2_ENABLED
+            {customization.OAUTH2_ENABLED
               ? "Login with OAuth2"
               : isLoading
                 ? "Logging in..."

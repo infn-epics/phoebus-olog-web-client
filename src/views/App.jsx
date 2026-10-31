@@ -27,8 +27,9 @@ import { AdvancedSearchDrawer } from "components/search/AdvancedSearchDrawer.jsx
 import { theme } from "src/config/theme";
 import { ologApi } from "src/api/ologApi";
 import { useCertCheck } from "src/hooks/useCertCheck";
+import customization from "src/config/customization";
 
-if (import.meta.env.VITE_APP_OAUTH2_ENABLED) {
+if (customization.OAUTH2_ENABLED) {
   console.info("[Auth] OAuth2 login mode ENABLED");
 } else {
   console.info("[Auth] Classic username/password login mode ENABLED");
@@ -55,6 +56,15 @@ const authConfig = {
   onRefreshTokenExpire: (event) => event.logIn(undefined, undefined, "redirect"),
   onLogin: (event) => event.logIn(undefined, undefined, "popup")
 };
+
+// The OAuth2 provider requires a client id and endpoints and logs in on load:
+// with classic login there is none, and AuthDataProvider falls back to the Olog session.
+const OptionalAuthProvider = ({ children }) =>
+  customization.OAUTH2_ENABLED ? (
+    <AuthProvider authConfig={authConfig}>{children}</AuthProvider>
+  ) : (
+    children
+  );
 
 const Overlay = styled("div")(({ theme }) => ({
   [theme.breakpoints.down("md")]: {
@@ -131,11 +141,11 @@ const App = styled(({ className }) => {
   const [advancedSearchOpen, setAdvancedSearchOpen] = useState(false);
   const { onHomePage } = useOnPage();
 
-  ologApi.endpoints.getUser.useQuery({}, { skip: import.meta.env.VITE_APP_OAUTH2_ENABLED === "true" });
+  ologApi.endpoints.getUser.useQuery({}, { skip: customization.OAUTH2_ENABLED });
 
   return (
     <>
-      <AuthProvider authConfig={authConfig}>
+      <OptionalAuthProvider>
         <AuthDataProvider>
           <LoginInfo />
           {advancedSearchOpen && (
@@ -176,7 +186,7 @@ const App = styled(({ className }) => {
             </Box>
           </Box>
         </AuthDataProvider>
-      </AuthProvider>
+      </OptionalAuthProvider>
     </>
   );
 

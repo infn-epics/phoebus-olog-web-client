@@ -1,12 +1,19 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { AuthContext as OAuthContext } from "react-oauth2-code-pkce";
 import { useDispatch } from "react-redux";
-import { clearOAuthSession, setOAuthSession } from "features/authSlice";
+import { clearOAuthSession, setOAuthSession, useUser } from "features/authSlice";
+import customization from "src/config/customization";
 
 const AuthDataContext = createContext(null);
 
 export const AuthDataProvider = ({ children }) => {
-  const { token, tokenData, logIn, logOut, loginInProgress, error } = useContext(OAuthContext);
+  const oauth = useContext(OAuthContext);
+  // Without OAuth2 there is no AuthProvider: the default context carries a placeholder
+  // token, which must not be used as a Bearer token
+  const { token, tokenData, logIn, logOut, loginInProgress, error } = customization.OAUTH2_ENABLED
+    ? oauth
+    : { ...oauth, token: null, tokenData: null, loginInProgress: false };
+  const sessionUser = useUser();
   const [authState, setAuthState] = useState({ token: null, tokenData: null });
   const dispatch = useDispatch();
 
@@ -27,7 +34,7 @@ export const AuthDataProvider = ({ children }) => {
         roles: tokenData.realm_access?.roles ?? []
       };
       dispatch(setOAuthSession({ user, accessToken: token }));
-    } else if (import.meta.env.VITE_APP_OAUTH2_ENABLED === "true") {
+    } else if (customization.OAUTH2_ENABLED) {
       dispatch(clearOAuthSession());
     }
   }, [dispatch, token, tokenData]);
@@ -50,7 +57,10 @@ export const AuthDataProvider = ({ children }) => {
     return tte <= skewSeconds * 1000;
   };
 
-  const isAuthenticated = !!authState.token && !isTokenExpired(0);
+  // Classic login: signed in as long as Olog returned a user for the session cookie
+  const isAuthenticated = customization.OAUTH2_ENABLED
+    ? !!authState.token && !isTokenExpired(0)
+    : !!sessionUser;
   const isAuthenticating = !error && (loginInProgress || (!!token && token !== authState.token));
 
 

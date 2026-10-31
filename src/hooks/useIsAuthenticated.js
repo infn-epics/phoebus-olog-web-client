@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useShowLogin, useUser } from "features/authSlice";
 import { useAuthData } from "src/auth/authContext";
+import customization from "src/config/customization";
 
 export const useIsAuthenticated = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -12,7 +13,7 @@ export const useIsAuthenticated = () => {
    * Show login if no session
    */
   useEffect(() => {
-    if (import.meta.env.VITE_APP_OAUTH2_ENABLED === "false") {
+    if (!customization.OAUTH2_ENABLED) {
       if (user) {
         setIsAuthenticated(true);
         setShowLogin(false);
