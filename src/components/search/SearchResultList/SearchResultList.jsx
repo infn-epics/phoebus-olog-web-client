@@ -12,7 +12,7 @@ import {
 } from "src/features/searchPageParamsReducer";
 
 export const SearchResultList = styled(
-  ({ logs, isFetchingSearchResults, className }) => {
+  ({ logs, isFetchingSearchResults, hasMoreLogs = false, className }) => {
     const navigate = useNavigate();
     const location = useLocation();
     const dispatch = useDispatch();
@@ -91,8 +91,14 @@ export const SearchResultList = styled(
     };
 
     useEffect(() => {
-      // Infinite scrolling with IntersectionObserver
-      if (searchResultListRef.current && loadMoreLogsRef.current) {
+      // Infinite scrolling with IntersectionObserver. A new observer reports straight
+      // away, so re-creating it after each fetch keeps loading until the list overflows.
+      if (
+        hasMoreLogs &&
+        !isFetchingSearchResults &&
+        searchResultListRef.current &&
+        loadMoreLogsRef.current
+      ) {
         const target = loadMoreLogsRef.current;
         const observer = new IntersectionObserver(
           (entries) => {
@@ -114,7 +120,13 @@ export const SearchResultList = styled(
           observer.unobserve(target);
         };
       }
-    }, [searchResultListRef, loadMoreLogsRef, dispatch]);
+    }, [
+      searchResultListRef,
+      loadMoreLogsRef,
+      dispatch,
+      hasMoreLogs,
+      isFetchingSearchResults
+    ]);
 
     return (
       <Stack

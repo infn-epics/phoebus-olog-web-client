@@ -15,8 +15,11 @@ import { useSearchPageParams } from "features/searchPageParamsReducer";
 import { useEnhancedSearchParams } from "src/hooks/useEnhancedSearchParams";
 import { useAuthData } from "src/auth/authContext";
 
-export const SearchResults = styled(({ className }) => {
-  const { isAuthenticated } = useAuthData();
+const NO_RESULTS = { logs: [], hitCount: 0 };
+
+// Rendered only when signed in: unmounting on sign-out drops the results that
+// `data` would otherwise still hold for the next user.
+const AuthenticatedSearchResults = ({ className }) => {
   const { searchParams, isSearchActive } = useEnhancedSearchParams();
   const searchPageParams = useSearchPageParams();
 
@@ -31,21 +34,18 @@ export const SearchResults = styled(({ className }) => {
     return params;
   }, [searchPageParams, searchParams]);
 
+  // `data` rather than `currentData`: it keeps the previous results while the next
+  // page loads, so the list stays mounted instead of flashing empty on every fetch.
   const {
-    currentData: searchResults = {
-      logs: [],
-      hitCount: 0
-    },
+    data,
     error,
-    isLoading: loading,
     isFetching: isFetchingSearchResults
   } = ologApi.endpoints.searchLogs.useQuery(searchLogsQuery, {
-    skip: !isAuthenticated,
     refetchOnMountOrArgChange: true,
     refetchOnFocus: true
   });
+  const { logs, hitCount } = (!error && data) || NO_RESULTS;
 
-  if (!isAuthenticated) {return <Alert severity="info">Sign in to search log entries.</Alert>;}
   return (
     <Stack
       className={`SearchResultList ${className}`}
@@ -67,7 +67,7 @@ export const SearchResults = styled(({ className }) => {
           <Divider sx={{ marginTop: 1, borderWidth: "1px" }} />
         </Box>
       )}
-      {loading && <LinearProgress />}
+      {isFetchingSearchResults && logs.length === 0 && <LinearProgress />}
       {error && (
         <Box>
           <Alert severity="error">
@@ -77,12 +77,14 @@ export const SearchResults = styled(({ className }) => {
           </Alert>
         </Box>
       )}
-      {searchResults?.logs?.length > 0 ? (
+      {logs.length > 0 && (
         <SearchResultList
-          logs={searchResults.logs}
+          logs={logs}
           isFetchingSearchResults={isFetchingSearchResults}
+          hasMoreLogs={logs.length < hitCount}
         />
-      ) : (
+      )}
+      {logs.length === 0 && !isFetchingSearchResults && !error && (
         <Box
           flex={1}
           py={2}
@@ -93,4 +95,11 @@ export const SearchResults = styled(({ className }) => {
       )}
     </Stack>
   );
+};
+
+export const SearchResults = styled(({ className }) => {
+  const { isAuthenticated } = useAuthData();
+
+  if (!isAuthenticated) {return <Alert severity="info">Sign in to search log entries.</Alert>;}
+  return <AuthenticatedSearchResults className={className} />;
 })({});
