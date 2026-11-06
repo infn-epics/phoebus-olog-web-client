@@ -88,7 +88,12 @@ const SimpleSearch = () => {
           ),
           sx: {
             fontSize: ".9rem",
-            backgroundColor: "#f5f5f5",
+            backgroundColor: "#f4f7f9",
+            borderRadius: 2,
+            "& .MuiOutlinedInput-notchedOutline": { borderColor: "divider" },
+            "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "#a8bac5" },
+            "&.Mui-focused": { backgroundColor: "#ffffff" },
+            "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderWidth: 2 },
             "& .MuiInputBase-input": {
               padding: "10px 0",
               paddingRight: 0

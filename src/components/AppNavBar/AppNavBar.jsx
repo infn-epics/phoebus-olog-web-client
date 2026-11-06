@@ -25,18 +25,17 @@ import {
   IconButton,
   List,
   ListItem,
-  Divider,
   Badge,
   Box,
   Tooltip
 } from "@mui/material";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
-import QuotaAdminNavItem from "./QuotaAdminNavItem";
 import LockIcon from "@mui/icons-material/Lock";
 import HomeIcon from "@mui/icons-material/Home";
 import FilterAltIcon from "@mui/icons-material/FilterAlt";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import { useDispatch } from "react-redux";
+import QuotaAdminNavItem from "./QuotaAdminNavItem";
 import { InternalButtonLink } from "components/shared/Link";
 import { useShowLogin, useShowLogout, useUser } from "features/authSlice";
 import LoginDialog from "components/LoginLogout/LoginDialog";
@@ -47,7 +46,6 @@ import { toggleSortOrder } from "features/searchPageParamsReducer";
 import { theme } from "src/config/theme";
 import { useOnPage } from "src/hooks/onPage";
 import { useEnhancedSearchParams } from "src/hooks/useEnhancedSearchParams";
-import { useAuthData } from "src/auth/authContext.jsx";
 
 const getFieldCount = (searchParams) => {
   let fieldCount = 0;
@@ -68,23 +66,10 @@ const AppNavBar = ({ advancedSearchOpen, setAdvancedSearchOpen }) => {
   const { setShowLogin } = useShowLogin();
   const { searchParams } = useEnhancedSearchParams();
   const { setShowLogout } = useShowLogout();
-  const { logIn: oauthLogIn } = useAuthData();
-  const { pathname } = location;
   const { onHomePage, onCreatePage } = useOnPage();
 
   const toggleSort = () => {
     dispatch(toggleSortOrder());
-  };
-
-  const performLogin = () => {
-    console.info("[Auth] Performing login");
-    if (import.meta.env.VITE_APP_OAUTH2_ENABLED) {
-      console.info("[Auth] OAuth2 login mode ENABLED");
-      oauthLogIn();
-    } else {
-      console.info("[Auth] Classic username/password login mode ENABLED");
-      setShowLogin(true);
-    }
   };
 
   if (import.meta.env.VITE_APP_OAUTH2_ENABLED) {
@@ -96,9 +81,10 @@ const AppNavBar = ({ advancedSearchOpen, setAdvancedSearchOpen }) => {
   return (
     <AppBar
       sx={{
-        backgroundColor: "transparent",
-        borderBottom: "1px solid #E2E8EE",
-        color: "#0099dc"
+        backgroundColor: "background.paper",
+        borderBottom: "1px solid",
+        borderColor: "divider",
+        color: "text.primary"
       }}
       component={"header"}
       position="static"
@@ -107,130 +93,105 @@ const AppNavBar = ({ advancedSearchOpen, setAdvancedSearchOpen }) => {
       <Toolbar
         disableGutters
         sx={{
-          display: "grid",
-          gridTemplateColumns: onHomePage
-            ? "auto minmax(0, 1.25fr) auto minmax(0, 2fr)"
-            : "auto minmax(0, 1fr) auto",
-          gridTemplateRows: "1fr",
-          minHeight: "70px",
-          height: "auto",
+          display: "flex",
+          alignItems: "center",
+          gap: { xs: 1, md: 2.5 },
+          px: { xs: 1.5, md: 3, xl: 5 },
+          py: { xs: 1, md: 0.75 },
+          minHeight: 68,
+          flexWrap: "wrap",
           [theme.breakpoints.down("md")]: {
-            height: "auto",
-            display: "flex",
-            flexDirection: "column-reverse",
-            alignItems: "flex-start",
-            gap: "20px",
-            padding: "10px 0",
-            "& > nav": {
-              width: "100%"
-            },
-            "& > div": {
-              flexFlow: "column"
-            },
-            "& > hr": {
-              display: "none"
-            }
+            minHeight: 64,
+            rowGap: 0.75
           }
         }}
       >
-        <Divider
-          sx={{ borderColor: "#E2E8EE" }}
-          orientation="vertical"
-        />
+        <Button
+          component={RouterLink}
+          onClick={() => {
+            setAdvancedSearchOpen(false);
+            const searchResultList = document.getElementById("searchResultList");
+            if (searchResultList) {
+              searchResultList.scrollTo({ top: 0, behavior: "smooth" });
+            }
+          }}
+          to="/"
+          color="inherit"
+          sx={{
+            order: 1,
+            flex: "0 0 auto",
+            minWidth: 0,
+            px: 0,
+            mr: { xs: "auto", md: 0 },
+            color: "text.primary",
+            "&:hover": { backgroundColor: "transparent", color: "primary.dark" }
+          }}
+        >
+          <HomeIcon sx={{ color: "primary.main", fontSize: 23 }} titleAccess="home" />
+          <Typography ml={1} fontSize="1.15rem" fontWeight={700} letterSpacing="-0.025em" component="span">
+            {import.meta.env.VITE_APP_LOGBOOK_NAME || "Olog"}
+          </Typography>
+        </Button>
         {onHomePage && (
-          <>
-            <nav
-              style={{ height: "100%" }}
-              aria-label="app menu"
+          <Box
+            component="nav"
+            aria-label="Search controls"
+            sx={{
+              flex: "1 1 420px",
+              minWidth: 0,
+              order: { xs: 3, md: 2 },
+              width: { xs: "100%", md: "auto" },
+              maxWidth: { md: 670 }
+            }}
+          >
+            <Stack
+              flexDirection="row"
+              alignItems="center"
+              sx={{
+                width: "100%",
+                minWidth: 0,
+              }}
             >
-              <Stack
-                flexDirection="row"
-                justifyContent="space-between"
-                alignItems="center"
-                sx={{ height: "100%" }}
-              >
-                <SimpleSearch />
-
-                <Box sx={{ minWidth: "100px", flex: 1 }}>
-                  <IconButton
-                    sx={{
-                      marginRight: "10px",
-                      backgroundColor: advancedSearchOpen
-                        ? "#dedede"
-                        : "inherit",
-                      "&:hover": {
-                        backgroundColor: advancedSearchOpen
-                          ? "#dedede"
-                          : "#F5F5F5"
-                      }
-                    }}
-                    onClick={() => setAdvancedSearchOpen((prev) => !prev)}
-                  >
-                    <Tooltip title="Filter">
-                      <Badge
-                        badgeContent={getFieldCount(searchParams)}
-                        color="primary"
-                      >
-                        <FilterAltIcon sx={{ color: "#616161" }} />
-                      </Badge>
-                    </Tooltip>
-                  </IconButton>
-
+              <SimpleSearch />
+              <Box sx={{ display: "flex", alignItems: "center", flex: "0 0 auto", pl: 0.5 }}>
+                <IconButton
+                  aria-label="Advanced filters"
+                  sx={{
+                    color: advancedSearchOpen ? "primary.dark" : "text.secondary",
+                    backgroundColor: advancedSearchOpen ? "primary.light" : "transparent",
+                    "&:hover": { backgroundColor: "primary.light" },
+                    "&:focus-visible": { outline: "2px solid", outlineColor: "primary.main" }
+                  }}
+                  onClick={() => setAdvancedSearchOpen((prev) => !prev)}
+                >
+                  <Tooltip title="Advanced filters">
+                    <Badge badgeContent={getFieldCount(searchParams)} color="primary">
+                      <FilterAltIcon />
+                    </Badge>
+                  </Tooltip>
+                </IconButton>
                   <SortToggleButton
                     label="create date"
                     onClick={toggleSort}
                   />
-                </Box>
-              </Stack>
-            </nav>
-            <Divider
-              sx={{ borderColor: "#E2E8EE" }}
-              orientation="vertical"
-            />
-          </>
+              </Box>
+            </Stack>
+          </Box>
         )}
         <Stack
           flexDirection="row"
-          justifyContent="space-between"
+          justifyContent="flex-end"
           alignItems="center"
-          width="100%"
-          height="100%"
-          px={{ xs: 2, lg: 3, xl: 5 }}
-          sx={{ minWidth: 0, boxSizing: "border-box", flexWrap: "wrap", gap: 1, py: 1 }}
+          sx={{
+            flex: "1 1 auto",
+            minWidth: 0,
+            boxSizing: "border-box",
+            flexWrap: "wrap",
+            gap: 1,
+            order: { xs: 2, md: 3 },
+            "& nav > ul": { gap: { xs: 0.5, md: 1 } }
+          }}
         >
-          <Button
-            component={RouterLink}
-            onClick={() => {
-              setAdvancedSearchOpen(false);
-              const searchResultList =
-                document.getElementById("searchResultList");
-              if (searchResultList) {
-                searchResultList.scrollTo({
-                  top: 0,
-                  behavior: "smooth"
-                });
-              }
-            }}
-            to="/"
-            sx={{ padding: "8px", marginLeft: "-8px" }}
-          >
-            <IconButton
-              sx={{
-                "&:hover": { background: "transparent" },
-                padding: "0 0 3px 0"
-              }}
-              color="inherit"
-            >
-              <HomeIcon titleAccess="home" />
-            </IconButton>
-            <Typography
-              ml={1}
-              fontSize="1.3rem"
-              component="span"
-            >
-              {import.meta.env.VITE_APP_LOGBOOK_NAME || "Olog"}
-            </Typography>
-          </Button>
           <nav aria-label="user menu" style={{ minWidth: 0, maxWidth: "100%" }}>
             <List
               sx={{
@@ -326,9 +287,9 @@ const AppNavBar = ({ advancedSearchOpen, setAdvancedSearchOpen }) => {
             </List>
           </nav>
         </Stack>
-        <LoginDialog />
-        <LogoutDialog />
       </Toolbar>
+      <LoginDialog />
+      <LogoutDialog />
     </AppBar>
   );
 };

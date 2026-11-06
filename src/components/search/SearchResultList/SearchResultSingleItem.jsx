@@ -26,27 +26,31 @@ export const SearchResultSingleItem = ({
   return (
     <Stack
       id={`search-result-log-${log.id}`}
-      px={4}
-      py={!condensedEntries ? 0.6 : 0.8}
+      px={{ xs: 2, md: 3 }}
+      py={!condensedEntries ? 1.15 : 1.35}
       sx={{
         position: "relative",
-        borderBottom: "1px solid #dedede",
-        borderRadius: "1px",
+        borderBottom: "1px solid",
+        borderColor: "divider",
         "&:focus": {
           outline: "none"
+        },
+        "&:focus-visible": {
+          outline: "2px solid",
+          outlineColor: "primary.main",
+          outlineOffset: -2
         },
         ...(!selected && {
           "&:hover": {
             cursor: "pointer",
-            backgroundColor: "#ECF0F3"
+            backgroundColor: "action.hover"
           }
         }),
         ...(selected && {
           "&:hover": {
             cursor: "pointer"
           },
-          borderRadius: "1px",
-          backgroundColor: "#0099dc24"
+          backgroundColor: "primary.light"
         }),
         ...(isNestedReply && {
           paddingLeft: "55px"
@@ -67,9 +71,10 @@ export const SearchResultSingleItem = ({
       >
         <Typography
           noWrap
-          fontSize=".7rem"
+          fontSize=".75rem"
           variant="body2"
           lineHeight={1.2}
+          color="text.secondary"
         >
           <IdentityName identifier={log.owner} />
         </Typography>
@@ -88,10 +93,11 @@ export const SearchResultSingleItem = ({
         alignItems="center"
       >
         <Typography
-          fontSize={isNestedReply ? ".7rem" : ".8rem"}
-          fontWeight="bold"
+          fontSize={isNestedReply ? ".75rem" : ".9rem"}
+          fontWeight={650}
           noWrap
           textOverflow="ellipsis"
+          color="text.primary"
         >
           {log.title}
         </Typography>
@@ -135,7 +141,7 @@ export const SearchResultSingleItem = ({
           commonmarkSrc={log.source}
           isSummary
           sx={{
-            fontSize: isNestedReply ? ".75rem" : ".8rem",
+            fontSize: isNestedReply ? ".8rem" : ".875rem",
             margin: 0
           }}
         />

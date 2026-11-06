@@ -11,6 +11,7 @@ const ContentView = styled(Box)(({ theme }) => ({
   gridTemplateColumns: "1px minmax(240px, var(--logbook-width, 38.5%)) 8px minmax(0, 1fr)",
   gridTemplateRows: "1fr",
   height: "100%",
+  backgroundColor: theme.palette.background.paper,
   [theme.breakpoints.down("md")]: {
     display: "flex",
     flexDirection: "column-reverse",
@@ -70,7 +71,7 @@ const SearchView = styled(({ className }) => {
   return (
     <Box height="100%">
       <ContentView ref={containerRef} className={`SearchView ${className}`} style={{ "--logbook-width": `${sidebarWidth}%`, userSelect: resizing ? "none" : undefined }}>
-        <Divider sx={{ borderColor: "#E2E8EE" }} orientation="vertical" />
+        <Divider sx={{ borderColor: "divider" }} orientation="vertical" />
         <Stack sx={{ minHeight: 0, overflow: "auto" }}>
           <LogbookBrowser />
           {isSearchActive && <SearchResults />}
@@ -93,7 +94,7 @@ const SearchView = styled(({ className }) => {
           sx={{
             display: { xs: "none", md: "block" },
             cursor: "col-resize", touchAction: "none",
-            backgroundColor: resizing ? "primary.main" : "#E2E8EE",
+            backgroundColor: resizing ? "primary.main" : "divider",
             "&:hover, &:focus-visible": { backgroundColor: "primary.main" },
             "&:focus-visible": { outline: "2px solid", outlineColor: "primary.main" }
           }}

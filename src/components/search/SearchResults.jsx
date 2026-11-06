@@ -50,7 +50,7 @@ export const SearchResults = styled(({ className }) => {
     <Stack
       className={`SearchResultList ${className}`}
       position="relative"
-      sx={{ backgroundColor: "#fafafa", minHeight: 0 }}
+      sx={{ backgroundColor: "background.default", minHeight: 0, color: "text.primary" }}
     >
       {isSearchActive && (
         <Box>
@@ -59,7 +59,8 @@ export const SearchResults = styled(({ className }) => {
               flexDirection="row"
               justifyContent="space-between"
               alignItems="center"
-              pt={1}
+              pt={1.5}
+              pb={0.5}
             >
               <SearchParamsBadges />
             </Stack>
@@ -88,7 +89,7 @@ export const SearchResults = styled(({ className }) => {
           py={2}
           px={4}
         >
-          <Typography>No records found</Typography>
+          <Typography color="text.secondary">No records found</Typography>
         </Box>
       )}
     </Stack>

@@ -19,10 +19,10 @@ function LogbookEntries({ name }) {
   }, { refetchOnMountOrArgChange: true });
   const logs = currentData?.logs ?? [];
 
-  return <Box sx={{ backgroundColor: "#fafafa" }}>
+  return <Box sx={{ backgroundColor: "background.default" }}>
     {isFetching && <LinearProgress aria-label="Loading entries" />}
     {isError && <Alert severity="error" action={<Button onClick={refetch}>Retry</Button>}>Unable to load entries.</Alert>}
-    {!isFetching && !isError && logs.length === 0 && <Typography sx={{ p: 2 }}>No entries.</Typography>}
+    {!isFetching && !isError && logs.length === 0 && <Typography color="text.secondary" sx={{ p: 2 }}>No entries.</Typography>}
     <Box role="region" aria-label={`Entries in ${name}`}>
       {logs.map((log) => <SearchResultSingleItem
         key={log.id}
@@ -32,7 +32,7 @@ function LogbookEntries({ name }) {
         onClick={(logId) => navigate(`/logs/${logId}`)}
       />)}
     </Box>
-    <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ p: 1 }}>
+    <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ p: 1.5, borderTop: "1px solid", borderColor: "divider" }}>
       <Button disabled={page === 0 || isFetching} onClick={() => setPage((value) => value - 1)}>Previous</Button>
       <Typography variant="caption">Page {page + 1}</Typography>
       <Button disabled={isFetching || !currentData || (page + 1) * PAGE_SIZE >= currentData.hitCount} onClick={() => setPage((value) => value + 1)}>Next</Button>
@@ -50,17 +50,34 @@ export default function LogbookBrowser() {
   const logbooks = permissions.filter((item) => item.admin || item.permissions?.some((permission) => ["READ", "WRITE", "ADMIN"].includes(permission)))
     .sort((a, b) => a.logbook.localeCompare(b.logbook));
 
-  return <Box component="nav" aria-label="Accessible logbooks" sx={{ overflow: "auto", minHeight: 0 }}>
-    <Typography variant="h6" sx={{ p: 2 }}>Logbooks</Typography>
+  return <Box component="nav" aria-label="Accessible logbooks" sx={{ overflow: "auto", minHeight: 0, height: "100%", backgroundColor: "background.paper", borderRight: { md: "1px solid" }, borderColor: "divider" }}>
+    <Typography variant="h6" sx={{ px: 2.5, pt: 2.5, pb: 1.5 }}>Logbooks</Typography>
     {(isAuthenticating || isFetching) && <LinearProgress aria-label="Loading logbooks" />}
-    {!isAuthenticated && !isAuthenticating && <Typography sx={{ px: 2, pb: 2 }}>Sign in to see your logbooks.</Typography>}
+    {!isAuthenticated && !isAuthenticating && <Typography color="text.secondary" sx={{ px: 2.5, pb: 2 }}>Sign in to see your logbooks.</Typography>}
     {isAuthenticated && isError && <Alert severity="error" action={<Button onClick={refetch}>Retry</Button>}>Unable to load logbooks.</Alert>}
-    {isAuthenticated && !isFetching && !isError && logbooks.length === 0 && <Typography sx={{ p: 2 }}>No accessible logbooks.</Typography>}
+    {isAuthenticated && !isFetching && !isError && logbooks.length === 0 && <Typography color="text.secondary" sx={{ p: 2.5 }}>No accessible logbooks.</Typography>}
     {isAuthenticated && logbooks.map((item) => {
       const open = expanded === item.logbook;
       return <Box key={item.logbook}>
-        <ListItemButton aria-expanded={open} onClick={() => setExpanded(open ? null : item.logbook)}>
-          <ListItemText primary={item.logbook} secondary={item.admin ? "Administrator" : item.permissions.join(" / ")} primaryTypographyProps={{ sx: { overflowWrap: "anywhere" } }} />
+        <ListItemButton
+          aria-expanded={open}
+          onClick={() => setExpanded(open ? null : item.logbook)}
+          sx={{
+            px: 2.5,
+            py: 1.25,
+            borderTop: "1px solid",
+            borderColor: "divider",
+            backgroundColor: open ? "primary.light" : "transparent",
+            "&:hover": { backgroundColor: open ? "primary.light" : "action.hover" },
+            "&:focus-visible": { outline: "2px solid", outlineColor: "primary.main", outlineOffset: -2 }
+          }}
+        >
+          <ListItemText
+            primary={item.logbook}
+            secondary={item.admin ? "Administrator" : item.permissions.join(" / ")}
+            primaryTypographyProps={{ sx: { overflowWrap: "anywhere", fontWeight: open ? 650 : 550 } }}
+            secondaryTypographyProps={{ sx: { color: "text.secondary", mt: 0.25, fontSize: "0.75rem" } }}
+          />
           {open ? <ExpandLess /> : <ExpandMore />}
         </ListItemButton>
         <Collapse in={open} unmountOnExit>
